@@ -38,6 +38,8 @@ export class RoomsController {
 
   @Put(':id')
   async create(@Param() params, @Body() payload: Buffer) {
+    console.log(payload)
+    console.log(params)
     const id = params.id;
     await this.storageService.set(id, payload, this.namespace);
     this.logger.debug(`Created room ${id}`);

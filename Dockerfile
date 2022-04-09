@@ -1,13 +1,15 @@
 FROM node:16-alpine
 
-WORKDIR /app
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
 
 COPY package*.json ./
-RUN npm ci --prod
-
-COPY ./dist ./dist
 
 USER node
+RUN npm ci
+
+COPY --chown=node:node . ./
+RUN npm run build
 
 EXPOSE 8080
 

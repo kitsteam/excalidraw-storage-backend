@@ -12,7 +12,7 @@ services:
       BACKEND_V2_POST_URL: http://localhost:8080/api/v2/scenes/
       LIBRARY_URL: https://libraries.excalidraw.com
       LIBRARY_BACKEND: https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries
-      SOCKET_SERVER_URL: http://localhost:5000/
+      SOCKET_SERVER_URL: http://localhost:5001/
       STORAGE_BACKEND: "http"
       HTTP_STORAGE_BACKEND_URL: "http://localhost:8080/api/v2"
 
@@ -26,7 +26,7 @@ services:
   excalidraw-room:
     image: excalidraw/excalidraw-room
     ports:
-      - "5000:80"
+      - "5001:80"
   
   redis:
     image: redis
