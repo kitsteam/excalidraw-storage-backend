@@ -16,8 +16,7 @@ export class StorageService {
     }
 
     Object.keys(StorageNamespace).forEach((namespace) => {
-      const keyv = new Keyv({
-        uri,
+      const keyv = new Keyv(uri, {
         namespace,
         ttl,
       });
