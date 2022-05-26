@@ -8,7 +8,7 @@ export class StorageService {
 
   constructor() {
     const uri = process.env[`STORAGE_URI`];
-    const ttl = 2592000; // 30 days
+    const ttl = process.env[`STORAGE_TTL`] ?? 2592000; // 30 days as default
     if (!uri) {
       this.logger.warn(
         `STORAGE_URI is undefined, will use non persistant in memory storage`,
