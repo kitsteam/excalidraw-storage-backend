@@ -8,6 +8,7 @@ export class StorageService {
 
   constructor() {
     const uri = process.env[`STORAGE_URI`];
+    const ttl = 2592000; // 30 days
     if (!uri) {
       this.logger.warn(
         `STORAGE_URI is undefined, will use non persistant in memory storage`,
@@ -18,6 +19,7 @@ export class StorageService {
       const keyv = new Keyv({
         uri,
         namespace,
+        ttl,
       });
       keyv.on('error', (err) =>
         this.logger.error(`Connection Error for namespace ${namespace}`, err),
