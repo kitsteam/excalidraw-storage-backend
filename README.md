@@ -1,5 +1,7 @@
 # excalidraw-storage-backend
 
+Forked from https://gitlab.com/kiliandeca/excalidraw-storage-backend
+
 This is a reimplementation of [excalidraw-json](https://github.com/excalidraw/excalidraw-json) suitable for self hosting you own instance of Excalidraw.
 
 It can be used with [kiliandeca/excalidraw-fork](https://gitlab.com/kiliandeca/excalidraw-fork)
