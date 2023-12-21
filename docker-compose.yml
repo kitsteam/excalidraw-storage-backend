@@ -2,14 +2,29 @@ version: "3.8"
 
 services:
   excalidraw-storage-backend:
-    build: .
+    build: 
+      context: .
+      target: production
     tty: true
     stdin_open: true
     ports:
       - "8080:8080"
     environment:
-      STORAGE_URI: redis://redis:6379
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
+      STORAGE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - .:/home/node/app
+  postgres:
+    image: postgres:12-alpine
+    # Pass config parameters to the postgres server.
+    # Find more information below when you need to generate the ssl-relevant file your self
+    # command: -c ssl=on -c ssl_cert_file=/var/lib/postgresql/server.crt -c ssl_key_file=/var/lib/postgresql/server.key
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: ${POSTGRES_DB:-excalidraw-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+volumes:
+  postgres_data:
