@@ -4,7 +4,7 @@ services:
   excalidraw-storage-backend:
     build: 
       context: .
-      target: development
+      target: production
     tty: true
     stdin_open: true
     ports:
