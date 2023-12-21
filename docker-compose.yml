@@ -2,13 +2,17 @@ version: "3.8"
 
 services:
   excalidraw-storage-backend:
-    build: .
+    build: 
+      context: .
+      target: development
     tty: true
     stdin_open: true
     ports:
       - "8080:8080"
     environment:
       STORAGE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - .:/home/node/app
   postgres:
     image: postgres:12-alpine
     # Pass config parameters to the postgres server.
