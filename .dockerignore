@@ -1,9 +1,6 @@
 *
-!.eslintrc.js
-!.prettierrc
 !nest-cli.json
 !src/
-!test/
 !package-lock.json
 !package.json
 !tsconfig.build.json
