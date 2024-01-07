@@ -17,6 +17,7 @@ on:
   push:
     branches:
       - main
+      - 7-chore-clean-up-dockerfile
 
 env:
   REGISTRY: ghcr.io
