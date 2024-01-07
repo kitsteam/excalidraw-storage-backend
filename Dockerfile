@@ -22,8 +22,6 @@ RUN npm ci
 
 COPY --from=production_buildstage /home/node/app/dist /home/node/app/dist
 
-USER node
-
 ENTRYPOINT ["npm", "run", "start:prod"]
 
 FROM base as development
