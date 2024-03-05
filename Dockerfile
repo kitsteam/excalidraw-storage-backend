@@ -12,17 +12,20 @@ RUN npm run build
 
 FROM base as production
 
+RUN apt-get update
+RUN apt-get install -y postgresql-client
+
 ENV NODE_ENV=production
 
 USER node
 WORKDIR /home/node/app
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json entrypoint.sh ./
 RUN npm ci
 
 COPY --from=production_buildstage /home/node/app/dist /home/node/app/dist
 
-ENTRYPOINT ["npm", "run", "start:prod"]
+CMD ["./entrypoint.sh"]
 
 FROM base as development
 

@@ -5,3 +5,4 @@
 !package.json
 !tsconfig.build.json
 !tsconfig.json
+!entrypoint.sh
