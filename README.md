@@ -26,3 +26,17 @@ It use Keyv as a simple K/V store so you can use the database of your choice.
 | `STORAGE_TTL`   | Time to live for data                                        | null             |
 | `LOG_LEVEL`     | Log level (`debug`, `verbose`, `log`, `warn`, `error`)       | `warn`           |
 | `BODY_LIMIT`    | Payload size limit for scenes or images                      | `50mb`           |
+
+### Env Variables for Postgres
+For setting postgres pool variables, a few code adjustment have to be made in the `storage.service.ts`:
+```typescript
+const store = new (require('@keyv/postgres'))({
+  uri,
+  max: 1
+})
+
+const keyv = new Keyv({
+  store,
+  ttl,
+});
+```
