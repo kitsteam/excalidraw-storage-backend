@@ -32,7 +32,11 @@ export class StorageService {
   async has(key: string, namespace: StorageNamespace): Promise<boolean> {
     return !!(await this.storagesMap.get(namespace).get(key));
   }
-  set(key: string, value: Buffer, namespace: StorageNamespace): Promise<true> {
+  set(
+    key: string,
+    value: Buffer | string,
+    namespace: StorageNamespace,
+  ): Promise<true> {
     return this.storagesMap.get(namespace).set(key, value);
   }
 }
@@ -41,4 +45,5 @@ export enum StorageNamespace {
   SCENES = 'SCENES',
   ROOMS = 'ROOMS',
   FILES = 'FILES',
+  SETTINGS = 'SETTINGS',
 }
