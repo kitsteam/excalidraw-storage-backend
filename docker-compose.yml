@@ -26,7 +26,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
 volumes:
   postgres_data:
