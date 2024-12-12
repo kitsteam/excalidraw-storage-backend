@@ -1,5 +1,6 @@
+import KeyvPostgres from '@keyv/postgres';
 import { Injectable, Logger } from '@nestjs/common';
-import * as Keyv from 'keyv';
+import Keyv from 'keyv';
 
 @Injectable()
 export class StorageService {
@@ -16,7 +17,10 @@ export class StorageService {
     }
 
     Object.keys(StorageNamespace).forEach((namespace) => {
-      const keyv = new Keyv(uri, {
+      const keyv = new Keyv({
+        store: new KeyvPostgres({
+          uri,
+        }),
         namespace,
         ttl,
       });
@@ -36,7 +40,7 @@ export class StorageService {
     key: string,
     value: Buffer | string,
     namespace: StorageNamespace,
-  ): Promise<true> {
+  ): Promise<boolean> {
     return this.storagesMap.get(namespace).set(key, value);
   }
 }
