@@ -21,17 +21,17 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@keyv/postgres": "^1.4.10",
-    "@keyv/redis": "^2.8.1",
+    "@keyv/postgres": "^2.0.4",
+    "@keyv/redis": "^4.1.0",
     "@nestjs/common": "^10.3.7",
     "@nestjs/core": "^10.3.7",
     "@nestjs/platform-express": "^10.3.7",
     "@nestjs/schedule": "^4.0.1",
     "@types/keyv": "^3.1.4",
-    "keyv": "^4.5.4",
+    "keyv": "^5.2.2",
     "nanoid": "^3.3.6",
     "npm-check-updates": "^16.14.12",
-    "pg": "^8.11.5",
+    "pg": "^8.13.1",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^5.0.5",
     "rxjs": "^7.8.1"
