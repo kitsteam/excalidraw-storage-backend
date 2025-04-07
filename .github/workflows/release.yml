@@ -17,8 +17,7 @@ on:
   push:
     branches:
       - main
-      - 20-feature-remove-expired-items-for-postgres-adapter
-      - upgrade-deps
+      - upgrade-nest
 
 env:
   REGISTRY: ghcr.io
