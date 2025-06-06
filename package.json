@@ -26,7 +26,7 @@
     "@nestjs/common": "^11.1.2",
     "@nestjs/core": "^11.1.1",
     "@nestjs/platform-express": "^11.1.1",
-    "@nestjs/schedule": "^5.0.1",
+    "@nestjs/schedule": "^6.0.0",
     "@types/keyv": "^4.2.0",
     "keyv": "^5.3.3",
     "nanoid": "^5.1.5",
