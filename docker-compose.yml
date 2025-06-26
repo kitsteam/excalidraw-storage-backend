@@ -5,6 +5,9 @@ services:
     build: 
       context: .
       target: development
+    depends_on:
+      postgres:
+        condition: service_healthy
     tty: true
     stdin_open: true
     ports:
@@ -24,6 +27,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_USER: ${POSTGRES_USER}
+    healthcheck:
+      test: /usr/local/bin/pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 5s
+      timeout: 10s
+      retries: 120
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
     # ports:
