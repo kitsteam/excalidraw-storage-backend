@@ -42,7 +42,7 @@
     "@nestjs/testing": "^11.1.1",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.14.0",
+    "@types/node": "^24.0.7",
     "@types/supertest": "^6.0.3",
     "@types/type-is": "^1.6.7",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
