@@ -29,6 +29,7 @@
     "@nestjs/schedule": "^5.0.1",
     "@types/keyv": "^4.2.0",
     "keyv": "^5.3.3",
+    "multer": "^2.0.2",
     "nanoid": "^5.1.5",
     "npm-check-updates": "^17.1.16",
     "pg": "^8.14.1",
@@ -58,9 +59,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
-  },
-  "overrides": {
-    "multer": "2.0.1"
   },
   "jest": {
     "moduleFileExtensions": [
