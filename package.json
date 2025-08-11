@@ -25,7 +25,7 @@
     "@keyv/redis": "^4.3.3",
     "@nestjs/common": "^11.1.2",
     "@nestjs/core": "^11.1.1",
-    "@nestjs/platform-express": "^11.1.1",
+    "@nestjs/platform-express": "^11.1.6",
     "@nestjs/schedule": "^5.0.1",
     "@types/keyv": "^4.2.0",
     "keyv": "^5.3.3",
