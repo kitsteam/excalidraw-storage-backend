@@ -1,11 +1,12 @@
 import KeyvPostgres from '@keyv/postgres';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import Keyv from 'keyv';
 
 @Injectable()
-export class StorageService {
+export class StorageService implements OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
   storagesMap = new Map<string, Keyv>();
+  private postgresStore: KeyvPostgres;
 
   constructor() {
     const uri: string = process.env[`STORAGE_URI`];
@@ -16,11 +17,12 @@ export class StorageService {
       );
     }
 
+    // Create a single PostgreSQL store instance to share among all Keyv instances
+    this.postgresStore = new KeyvPostgres({ uri });
+
     Object.keys(StorageNamespace).forEach((namespace) => {
       const keyv = new Keyv({
-        store: new KeyvPostgres({
-          uri,
-        }),
+        store: this.postgresStore,
         namespace,
         ttl,
       });
@@ -30,6 +32,24 @@ export class StorageService {
       this.storagesMap.set(namespace, keyv);
     });
   }
+
+  async onModuleDestroy() {
+    this.logger.log('Closing database connections...');
+
+    try {
+      // Clear all Keyv instances first
+      this.storagesMap.clear();
+
+      // Close the shared PostgreSQL store once
+      if (this.postgresStore) {
+        await this.postgresStore.disconnect();
+        this.logger.log('Database connection closed successfully');
+      }
+    } catch (err) {
+      this.logger.error('Error closing database connection:', err);
+    }
+  }
+
   get(key: string, namespace: StorageNamespace): Promise<Buffer> {
     return this.storagesMap.get(namespace).get(key);
   }
