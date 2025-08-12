@@ -1,6 +1,6 @@
-FROM node:24-bullseye-slim as base
+FROM node:24-bullseye-slim AS base
 
-FROM base as production_buildstage
+FROM base AS production_buildstage
 
 WORKDIR /home/node/app
 COPY package.json package-lock.json ./
@@ -10,23 +10,27 @@ RUN npm ci
 COPY --chown=node:node . ./
 RUN npm run build
 
-FROM base as production
+FROM base AS production
 
-RUN apt-get update
-RUN apt-get install -y postgresql-client
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /home/node/app && \
+    chown node:node /home/node/app
 
 ENV NODE_ENV=production
 
-USER node
 WORKDIR /home/node/app
+COPY --chown=node:node package.json package-lock.json entrypoint.sh ./
+RUN chmod +x entrypoint.sh
 
-COPY package.json package-lock.json entrypoint.sh ./
+USER node
 RUN npm ci
 
 COPY --from=production_buildstage /home/node/app/dist /home/node/app/dist
 
 CMD ["./entrypoint.sh"]
 
-FROM base as development
+FROM base AS development
 
 WORKDIR /home/node/app
