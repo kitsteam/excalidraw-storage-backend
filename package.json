@@ -34,7 +34,7 @@
     "keyv": "^5.3.3",
     "multer": "^2.0.2",
     "nanoid": "^3.3.11",
-    "npm-check-updates": "^17.1.16",
+    "npm-check-updates": "^18.0.2",
     "pg": "^8.14.1",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.0.1",
