@@ -8,6 +8,7 @@ import {
   Param,
   Put,
   Res,
+  Patch,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { StorageNamespace, StorageService } from '../storage/storage.service';
@@ -45,5 +46,21 @@ export class FilesController {
     return {
       id,
     };
+  }
+
+  @Patch(':id/timestamp')
+  async touch(@Param('id') id: string) {
+    const data = await this.storageService.get(id, this.namespace);
+    if (!data) {
+      this.logger.warn(`[touch] File ${id} not found`);
+      throw new NotFoundException();
+    }
+
+    await this.storageService.set(id, data, this.namespace);
+  
+    const updatedAt = new Date().toISOString();
+    this.logger.debug(`[touch] ✅ Updated timestamp for file ${id} -> ${updatedAt}`);
+  
+    return { id, updatedAt };
   }
 }
