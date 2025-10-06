@@ -33,7 +33,7 @@
     "@types/keyv": "^4.2.0",
     "keyv": "^5.5.3",
     "multer": "^2.0.2",
-    "nanoid": "^3.3.11",
+    "nanoid": "^5.1.6",
     "npm-check-updates": "^19.0.0",
     "pg": "^8.14.1",
     "reflect-metadata": "^0.2.2",
