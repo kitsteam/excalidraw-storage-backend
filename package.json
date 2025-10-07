@@ -29,7 +29,7 @@
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
-    "@nestjs/schedule": "^5.0.1",
+    "@nestjs/schedule": "^6.0.1",
     "@types/keyv": "^4.2.0",
     "keyv": "^5.5.3",
     "multer": "^2.0.2",
