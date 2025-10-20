@@ -1,4 +1,4 @@
-FROM node:24-bullseye-slim AS base
+FROM node:25-bullseye-slim AS base
 
 FROM base AS production_buildstage
 
