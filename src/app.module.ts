@@ -1,4 +1,9 @@
-import { Logger, MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import {
+  Logger,
+  MiddlewareConsumer,
+  Module,
+  RequestMethod,
+} from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RawParserMiddleware } from './raw-parser.middleware';
 import { ScenesController } from './scenes/scenes.controller';
@@ -38,6 +43,8 @@ const addTtlProvider = () => {
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RawParserMiddleware).forRoutes({path: '*', method: RequestMethod.ALL});
+    consumer
+      .apply(RawParserMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

@@ -19,7 +19,7 @@ export class FilesController {
   private readonly logger = new Logger(FilesController.name);
   namespace = StorageNamespace.FILES;
 
-  constructor(private storageService: StorageService) {}
+  constructor(private storageService: StorageService) { }
 
   @Get(':id')
   @Header('content-type', 'application/octet-stream')
@@ -57,10 +57,12 @@ export class FilesController {
     }
 
     await this.storageService.set(id, data, this.namespace);
-  
+
     const updatedAt = new Date().toISOString();
-    this.logger.debug(`[touch] ✅ Updated timestamp for file ${id} -> ${updatedAt}`);
-  
+    this.logger.debug(
+      `[touch] ✅ Updated timestamp for file ${id} -> ${updatedAt}`,
+    );
+
     return { id, updatedAt };
   }
 }
