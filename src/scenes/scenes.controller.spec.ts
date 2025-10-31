@@ -4,14 +4,21 @@ import { StorageService } from '../storage/storage.service';
 
 describe('ScenesController', () => {
   let controller: ScenesController;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [StorageService],
       controllers: [ScenesController],
     }).compile();
 
     controller = module.get<ScenesController>(ScenesController);
+  });
+
+  afterEach(async () => {
+    if (module) {
+      await module.close();
+    }
   });
 
   it('should be defined', () => {
