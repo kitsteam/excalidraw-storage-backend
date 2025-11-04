@@ -18,12 +18,17 @@ export const createTestDatabaseSetup = async () => {
 
   // Set up client with uri:
   const client = new Client({ connectionString: uri });
-  client.connect();
+  await client.connect();
 
-  return client
-    .query(`CREATE DATABASE "${database}"`)
-    .catch((e) => logger.debug('Error executing query:', e)) // this will happen after the first run, so we'll discard it
-    .then(() => client.end());
+  try {
+    await client.query(`CREATE DATABASE "${database}"`);
+    logger.debug('Test database created successfully');
+  } catch (e) {
+    // Database already exists, which is fine
+    logger.debug('Test database already exists');
+  } finally {
+    await client.end();
+  }
 };
 
 // This helper is required for testing the postgres ttl service. It is designed specificially to clean up after each postgres spec.
@@ -32,9 +37,13 @@ export const clearDatabase = async () => {
   const uri: string = process.env[`STORAGE_URI`];
   // Set up client with uri:
   const client = new Client({ connectionString: uri });
-  client.connect();
-  return client
-    .query('DELETE FROM keyv;')
-    .catch((e) => console.error(e.stack))
-    .then(() => client.end());
+  await client.connect();
+
+  try {
+    await client.query('DELETE FROM keyv;');
+  } catch (e) {
+    logger.error('Error clearing database:', e);
+  } finally {
+    await client.end();
+  }
 };

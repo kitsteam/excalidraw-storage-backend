@@ -5,15 +5,22 @@ import { StorageService } from '../storage/storage.service';
 describe('HealthController', () => {
   let controller: HealthController;
   let storageService: StorageService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [StorageService],
       controllers: [HealthController],
     }).compile();
 
     storageService = module.get<StorageService>(StorageService);
     controller = module.get<HealthController>(HealthController);
+  });
+
+  afterEach(async () => {
+    if (module) {
+      await module.close();
+    }
   });
 
   it('should be defined', () => {

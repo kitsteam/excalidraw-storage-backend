@@ -13,18 +13,30 @@ beforeAll(() => {
 describe('PostgresTtlService', () => {
   let postgresTtlService: PostgresTtlService;
   let storageService: StorageService;
+  let module: TestingModule;
 
   const setupServicesWithTtl = async (ttl: string) => {
+    // Close previous module if it exists
+    if (module) {
+      await module.close();
+    }
+
     process.env[`STORAGE_TTL`] = ttl;
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [PostgresTtlService, StorageService],
     }).compile();
     storageService = module.get<StorageService>(StorageService);
     postgresTtlService = module.get<PostgresTtlService>(PostgresTtlService);
   };
 
-  afterEach(() => {
-    return clearDatabase();
+  afterEach(async () => {
+    await clearDatabase();
+  });
+
+  afterAll(async () => {
+    if (module) {
+      await module.close();
+    }
   });
 
   it('should be defined', async () => {
