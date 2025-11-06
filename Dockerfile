@@ -1,5 +1,7 @@
 FROM node:24-bullseye-slim AS base
 
+RUN corepack enable
+
 FROM base AS production_buildstage
 
 WORKDIR /home/node/app
