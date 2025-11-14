@@ -50,17 +50,18 @@ export class FilesController {
 
   @Patch(':id/timestamp')
   async touch(@Param('id') id: string) {
-    const data = await this.storageService.get(id, this.namespace);
-    if (!data) {
+    this.logger.debug(`[touch] Starting for file ${id}`);
+
+    const updated = await this.storageService.touch(id, this.namespace);
+
+    if (!updated) {
       this.logger.warn(`[touch] File ${id} not found`);
       throw new NotFoundException();
     }
 
-    await this.storageService.set(id, data, this.namespace);
-  
     const updatedAt = new Date().toISOString();
-    this.logger.debug(`[touch] ✅ Updated timestamp for file ${id} -> ${updatedAt}`);
-  
+    this.logger.debug(`[touch] ✅ Refreshed TTL for file ${id} -> ${updatedAt}`);
+
     return { id, updatedAt };
   }
 }
