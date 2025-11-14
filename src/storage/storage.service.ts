@@ -65,6 +65,25 @@ export class StorageService implements OnModuleDestroy {
   }
 }
 
+async touch(key: string, namespace: StorageNamespace): Promise<boolean> {
+  try {
+    const query = (this.postgresStore as any).query;
+    const expires = Date.now() + this.ttl;
+    const fullKey = `${namespace}:${key}`;
+
+    const result = await query(
+      `UPDATE keyv
+         SET value = jsonb_set(value::jsonb, '{expires}', to_jsonb($1::bigint))
+         WHERE key = $2`,
+      [expires, fullKey],
+    );
+
+    return result.rowCount > 0;
+  } catch {
+    return false;
+  }
+}
+
 export enum StorageNamespace {
   SCENES = 'SCENES',
   ROOMS = 'ROOMS',
