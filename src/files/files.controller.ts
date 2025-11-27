@@ -19,7 +19,7 @@ export class FilesController {
   private readonly logger = new Logger(FilesController.name);
   namespace = StorageNamespace.FILES;
 
-  constructor(private storageService: StorageService) {}
+  constructor(private storageService: StorageService) { }
 
   @Get(':id')
   @Header('content-type', 'application/octet-stream')
