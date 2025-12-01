@@ -24,7 +24,7 @@ export class StorageService implements OnModuleDestroy {
         `STORAGE_URI is undefined, will use non persistant in memory storage`,
       );
     }
-    
+
     // Create a single PostgreSQL store instance to share among all Keyv instances
     this.postgresStore = new KeyvPostgres({ uri }) as KeyvPostgresInternal;
 
@@ -41,6 +41,38 @@ export class StorageService implements OnModuleDestroy {
 
       this.storagesMap.set(namespace, keyv);
     });
+  }
+
+  async onModuleDestroy() {
+      this.logger.log('Closing database connections...');
+
+      try {
+        // Clear all Keyv instances first
+        this.storagesMap.clear();
+
+        // Close the shared PostgreSQL store once
+        if (this.postgresStore) {
+          await this.postgresStore.disconnect();
+          this.logger.log('Database connection closed successfully');
+        }
+      } catch (err) {
+        this.logger.error('Error closing database connection:', err);
+      }
+    }
+
+  get(key: string, namespace: StorageNamespace): Promise<Buffer> {
+    return this.storagesMap.get(namespace)?.get(key);
+  }
+  async has(key: string, namespace: StorageNamespace): Promise<boolean> {
+    const val = await this.get(key, namespace);
+    return val !== undefined && val !== null;
+  }
+  set(
+    key: string,
+    value: Buffer | string,
+    namespace: StorageNamespace,
+  ): Promise<boolean> {
+    return this.storagesMap.get(namespace)?.set(key, value);
   }
 
   // Refresh TTL for an existing record in the Keyv/Postgres table.
@@ -76,40 +108,6 @@ export class StorageService implements OnModuleDestroy {
       );
       return false;
     }
-  }
-
-  async onModuleDestroy() {
-    this.logger.log('Closing database connections...');
-
-    try {
-      // Clear all Keyv instances first
-      this.storagesMap.clear();
-
-      // Close the shared PostgreSQL store once
-      if (this.postgresStore) {
-        await this.postgresStore.disconnect();
-        this.logger.log('Database connection closed successfully');
-      }
-    } catch (err) {
-      this.logger.error('Error closing database connection:', err);
-    }
-  }
-
-  async get(key: string, namespace: StorageNamespace): Promise<Buffer> {
-    return this.storagesMap.get(namespace)?.get(key);
-  }
-
-  async has(key: string, namespace: StorageNamespace): Promise<boolean> {
-    const val = await this.get(key, namespace);
-    return val !== undefined && val !== null;
-  }
-
-  async set(
-    key: string,
-    value: Buffer | string,
-    namespace: StorageNamespace,
-  ): Promise<boolean> {
-    return this.storagesMap.get(namespace)?.set(key, value);
   }
 }
 
