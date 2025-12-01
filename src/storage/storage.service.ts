@@ -36,7 +36,7 @@ export class StorageService implements OnModuleDestroy {
       });
 
       keyv.on('error', (err) =>
-        this.logger.error(`Connection error for namespace ${namespace}`, err),
+        this.logger.error(`Connection Error for namespace ${namespace}`, err),
       );
 
       this.storagesMap.set(namespace, keyv);
