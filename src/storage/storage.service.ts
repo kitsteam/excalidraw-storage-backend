@@ -6,7 +6,6 @@ import { Pool, QueryResult } from 'pg';
 interface KeyvPostgresInternal extends KeyvPostgres {
   query: Pool['query'];
   client?: Pool;
-  disconnect?: () => Promise<void>;
 }
 
 @Injectable()
@@ -25,7 +24,7 @@ export class StorageService implements OnModuleDestroy {
         'STORAGE_URI is undefined, will use non-persistent in-memory storage',
       );
     }
-
+    
     // Create a single PostgreSQL store instance to share among all Keyv instances
     this.postgresStore = new KeyvPostgres({ uri }) as KeyvPostgresInternal;
 
@@ -97,23 +96,10 @@ export class StorageService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    this.logger.log('Closing StorageService connections...');
-
-    try {
-      // Clear all Keyv instances first
-      this.storagesMap.clear();
-
-      if (this.postgresStore) {
-        if (typeof this.postgresStore.disconnect === 'function') {
-          await this.postgresStore.disconnect();
-        } else if (this.postgresStore.client?.end) {
-          await this.postgresStore.client.end();
-        }
-
-        this.logger.log('Database connection closed successfully');
-      }
-    } catch (err) {
-      this.logger.error('Error closing database connection:', err);
+    const client = this.postgresStore.client;
+    if (client?.end) {
+      await client.end();
+      this.logger.debug('Postgres client connection closed');
     }
   }
 }
