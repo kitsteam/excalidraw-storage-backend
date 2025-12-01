@@ -61,7 +61,7 @@ export class StorageService implements OnModuleDestroy {
     }
 
   get(key: string, namespace: StorageNamespace): Promise<Buffer> {
-    return this.storagesMap.get(namespace)?.get(key);
+    return this.storagesMap.get(namespace).get(key);
   }
   async has(key: string, namespace: StorageNamespace): Promise<boolean> {
     const val = await this.get(key, namespace);
@@ -72,7 +72,7 @@ export class StorageService implements OnModuleDestroy {
     value: Buffer | string,
     namespace: StorageNamespace,
   ): Promise<boolean> {
-    return this.storagesMap.get(namespace)?.set(key, value);
+    return this.storagesMap.get(namespace).set(key, value);
   }
 
   // Refresh TTL for an existing record in the Keyv/Postgres table.
