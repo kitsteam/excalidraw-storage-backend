@@ -21,7 +21,7 @@ export class StorageService implements OnModuleDestroy {
 
     if (!uri) {
       this.logger.warn(
-        'STORAGE_URI is undefined, will use non-persistent in-memory storage',
+        `STORAGE_URI is undefined, will use non persistant in memory storage`,
       );
     }
     
