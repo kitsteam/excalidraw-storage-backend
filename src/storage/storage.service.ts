@@ -21,7 +21,7 @@ export class StorageService implements OnModuleDestroy {
 
     if (!uri) {
       this.logger.warn(
-        `STORAGE_URI is undefined, will use non persistant in memory storage`,
+        'STORAGE_URI is undefined, will use non-persistent in-memory storage',
       );
     }
     
@@ -36,7 +36,7 @@ export class StorageService implements OnModuleDestroy {
       });
 
       keyv.on('error', (err) =>
-        this.logger.error(`Connection Error for namespace ${namespace}`, err),
+        this.logger.error(`Connection error for namespace ${namespace}`, err),
       );
 
       this.storagesMap.set(namespace, keyv);
@@ -96,10 +96,19 @@ export class StorageService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    const client = this.postgresStore.client;
-    if (client?.end) {
-      await client.end();
-      this.logger.debug('Postgres client connection closed');
+    this.logger.log('Closing database connections...');
+
+    try {
+      // Clear all Keyv instances first
+      this.storagesMap.clear();
+
+      // Close the shared PostgreSQL store once
+      if (this.postgresStore) {
+        await this.postgresStore.disconnect();
+        this.logger.log('Database connection closed successfully');
+      }
+    } catch (err) {
+      this.logger.error('Error closing database connection:', err);
     }
   }
 }
