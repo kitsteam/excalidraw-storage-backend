@@ -43,23 +43,6 @@ export class StorageService implements OnModuleDestroy {
     });
   }
 
-  async get(key: string, namespace: StorageNamespace): Promise<Buffer> {
-    return this.storagesMap.get(namespace)?.get(key);
-  }
-
-  async has(key: string, namespace: StorageNamespace): Promise<boolean> {
-    const val = await this.get(key, namespace);
-    return val !== undefined && val !== null;
-  }
-
-  async set(
-    key: string,
-    value: Buffer | string,
-    namespace: StorageNamespace,
-  ): Promise<boolean> {
-    return this.storagesMap.get(namespace)?.set(key, value);
-  }
-
   // Refresh TTL for an existing record in the Keyv/Postgres table.
   async touch(key: string, namespace: StorageNamespace): Promise<boolean> {
     try {
@@ -110,6 +93,23 @@ export class StorageService implements OnModuleDestroy {
     } catch (err) {
       this.logger.error('Error closing database connection:', err);
     }
+  }
+
+  async get(key: string, namespace: StorageNamespace): Promise<Buffer> {
+    return this.storagesMap.get(namespace)?.get(key);
+  }
+
+  async has(key: string, namespace: StorageNamespace): Promise<boolean> {
+    const val = await this.get(key, namespace);
+    return val !== undefined && val !== null;
+  }
+
+  async set(
+    key: string,
+    value: Buffer | string,
+    namespace: StorageNamespace,
+  ): Promise<boolean> {
+    return this.storagesMap.get(namespace)?.set(key, value);
   }
 }
 
