@@ -21,7 +21,7 @@ export class StorageService implements OnModuleDestroy {
 
     if (!uri) {
       this.logger.warn(
-        'STORAGE_URI is undefined, will use non-persistent in-memory storage',
+        `STORAGE_URI is undefined, will use non persistant in memory storage`,
       );
     }
     
@@ -36,7 +36,7 @@ export class StorageService implements OnModuleDestroy {
       });
 
       keyv.on('error', (err) =>
-        this.logger.error(`Connection error for namespace ${namespace}`, err),
+        this.logger.error(`Connection Error for namespace ${namespace}`, err),
       );
 
       this.storagesMap.set(namespace, keyv);
