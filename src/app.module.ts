@@ -11,7 +11,7 @@ import { StorageService } from './storage/storage.service';
 import { RoomsController } from './rooms/rooms.controller';
 import { FilesController } from './files/files.controller';
 import { HealthController } from './health/health.controller';
-import { PostgresTtlService } from './ttl/postgres_ttl.service';
+import { PostgresTtlService } from './ttl/postgres-ttl.service';
 
 const logger = new Logger('AppModule');
 
