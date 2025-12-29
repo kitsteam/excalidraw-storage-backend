@@ -1,31 +1,59 @@
 import KeyvPostgres from '@keyv/postgres';
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  Optional,
+} from '@nestjs/common';
 import Keyv from 'keyv';
+import {
+  KEYV_STORE_FACTORY,
+  KeyvStore,
+  KeyvStoreFactory,
+} from './keyv-store.interface';
 
 @Injectable()
 export class StorageService implements OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
   storagesMap = new Map<string, Keyv>();
-  private postgresStore: KeyvPostgres;
+  private store?: KeyvStore;
 
-  constructor() {
+  constructor(
+    @Optional()
+    @Inject(KEYV_STORE_FACTORY)
+    storeFactory?: KeyvStoreFactory,
+  ) {
     const uri: string = process.env[`STORAGE_URI`];
     const ttl: number = parseInt(process.env[`STORAGE_TTL`], 10);
-    if (!uri) {
+
+    // Determine which store to use:
+    // 1. Injected factory (for testing)
+    // 2. KeyvPostgres if STORAGE_URI is set (production)
+    // 3. Keyv's built-in in-memory store (no store option)
+    if (storeFactory) {
+      this.store = storeFactory();
+    } else if (uri) {
+      this.store = new KeyvPostgres({ uri });
+    } else {
       this.logger.warn(
-        `STORAGE_URI is undefined, will use non persistant in memory storage`,
+        `STORAGE_URI is undefined, will use non persistent in memory storage`,
       );
+      // store remains undefined - Keyv will use its built-in Map store
     }
 
-    // Create a single PostgreSQL store instance to share among all Keyv instances
-    this.postgresStore = new KeyvPostgres({ uri });
-
     Object.keys(StorageNamespace).forEach((namespace) => {
-      const keyv = new Keyv({
-        store: this.postgresStore,
-        namespace,
-        ttl,
-      });
+      // Only pass store option if we have one - otherwise Keyv uses its built-in Map
+      const keyvOptions: { namespace: string; ttl: number; store?: KeyvStore } =
+        {
+          namespace,
+          ttl,
+        };
+      if (this.store) {
+        keyvOptions.store = this.store;
+      }
+
+      const keyv = new Keyv(keyvOptions);
       keyv.on('error', (err) =>
         this.logger.error(`Connection Error for namespace ${namespace}`, err),
       );
@@ -40,9 +68,9 @@ export class StorageService implements OnModuleDestroy {
       // Clear all Keyv instances first
       this.storagesMap.clear();
 
-      // Close the shared PostgreSQL store once
-      if (this.postgresStore) {
-        await this.postgresStore.disconnect();
+      // Close the shared store if it has a disconnect method
+      if (this.store?.disconnect) {
+        await this.store.disconnect();
         this.logger.log('Database connection closed successfully');
       }
     } catch (err) {

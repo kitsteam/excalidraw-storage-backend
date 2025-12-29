@@ -1,14 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoomsController } from './rooms.controller';
 import { StorageService } from '../storage/storage.service';
+import { createMockStorageService } from '../../test/mocks/storage.mock';
 
 describe('RoomsController', () => {
   let controller: RoomsController;
   let module: TestingModule;
+  let mockStorageService: ReturnType<typeof createMockStorageService>;
 
   beforeEach(async () => {
+    mockStorageService = createMockStorageService();
     module = await Test.createTestingModule({
-      providers: [StorageService],
+      providers: [
+        {
+          provide: StorageService,
+          useValue: mockStorageService,
+        },
+      ],
       controllers: [RoomsController],
     }).compile();
 
@@ -16,6 +24,7 @@ describe('RoomsController', () => {
   });
 
   afterEach(async () => {
+    jest.clearAllMocks();
     if (module) {
       await module.close();
     }

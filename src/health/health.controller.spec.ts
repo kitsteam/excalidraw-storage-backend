@@ -1,23 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
 import { StorageService } from '../storage/storage.service';
+import { createMockStorageService } from '../../test/mocks/storage.mock';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let storageService: StorageService;
   let module: TestingModule;
+  let mockStorageService: ReturnType<typeof createMockStorageService>;
 
   beforeEach(async () => {
+    mockStorageService = createMockStorageService();
     module = await Test.createTestingModule({
-      providers: [StorageService],
+      providers: [
+        {
+          provide: StorageService,
+          useValue: mockStorageService,
+        },
+      ],
       controllers: [HealthController],
     }).compile();
 
-    storageService = module.get<StorageService>(StorageService);
     controller = module.get<HealthController>(HealthController);
   });
 
   afterEach(async () => {
+    jest.clearAllMocks();
     if (module) {
       await module.close();
     }
@@ -28,11 +35,11 @@ describe('HealthController', () => {
   });
 
   it('returns healthy', async () => {
-    jest.spyOn(storageService, 'set').mockImplementation(() => {
-      return new Promise((resolve) => {
-        return resolve(true);
-      });
-    });
     expect(await controller.health()).toBe('healthy');
+    expect(mockStorageService.set).toHaveBeenCalledWith(
+      'last-health-check',
+      expect.any(String),
+      expect.anything(),
+    );
   });
 });

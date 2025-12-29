@@ -1,10 +1,38 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Client } from 'pg';
+import {
+  POSTGRES_CLIENT_FACTORY,
+  PostgresClientFactory,
+} from './postgres-client.interface';
+
+/**
+ * Default factory that creates a real pg.Client instance.
+ */
+const defaultClientFactory: PostgresClientFactory = () => {
+  const uri: string = process.env[`STORAGE_URI`];
+  const client = new Client({ connectionString: uri });
+  return {
+    connect: () => client.connect(),
+    query: async (sql: string) => {
+      return client.query(sql);
+    },
+    end: () => client.end(),
+  };
+};
 
 @Injectable()
 export class PostgresTtlService {
   private readonly logger = new Logger(PostgresTtlService.name);
+  private readonly clientFactory: PostgresClientFactory;
+
+  constructor(
+    @Optional()
+    @Inject(POSTGRES_CLIENT_FACTORY)
+    clientFactory?: PostgresClientFactory,
+  ) {
+    this.clientFactory = clientFactory ?? defaultClientFactory;
+  }
 
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async handleCron() {
@@ -14,33 +42,26 @@ export class PostgresTtlService {
   }
 
   async deleteExpiredItems() {
-    const uri: string = process.env[`STORAGE_URI`];
-    if (!uri) {
-      this.logger.error(`STORAGE_URI is undefined, cannot clean up old items`);
-      return;
-    }
-
-    // Set up client with uri:
-    const client = new Client({ connectionString: uri });
-    let expired_items_count = 0;
+    let expiredItemsCount = 0;
+    const client = this.clientFactory();
 
     try {
       // Connect to the database
-      client.connect();
+      await client.connect();
       // Delete all expired items. TTL is stored in milliseconds:
       const queryResult = await client.query(
         "DELETE FROM keyv WHERE (keyv.value::json ->> 'expires')::bigint / 1000 <= extract(epoch from now());",
       );
 
       this.logger.log('Deleted expired items:', queryResult.rowCount);
-      expired_items_count = queryResult.rowCount;
+      expiredItemsCount = queryResult.rowCount;
     } catch (error) {
       this.logger.error('Error executing query:', error);
     } finally {
-      // Alwys release the connection afterwards:
+      // Always release the connection afterwards:
       await client.end();
     }
 
-    return expired_items_count;
+    return expiredItemsCount;
   }
 }

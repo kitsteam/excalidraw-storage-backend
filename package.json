@@ -18,7 +18,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -42,6 +42,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.8",
@@ -76,7 +77,10 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(nanoid)/)"
+      "node_modules/(?!(nanoid|@electric-sql/pglite)/)"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/../test/setup.ts"
     ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
