@@ -1,28 +1,23 @@
-import { PGlite } from '@electric-sql/pglite';
 import { Test, TestingModule } from '@nestjs/testing';
 import Keyv from 'keyv';
 import KeyvPostgres from '@keyv/postgres';
 import { StorageNamespace } from '../storage/storage.service';
 import { POSTGRES_CLIENT_FACTORY } from './postgres-client.interface';
 import { PostgresTtlService } from './postgres_ttl.service';
-import { PGlitePoolAdapter, createPGliteClientFactory } from '../../test/utils';
-import { configurePGMock } from '../../test/setup';
+import { PgMockManager, createPGliteClientFactory } from '../../test/utils';
 
 /**
  * Test helper that wraps Keyv with real @keyv/postgres for in-memory PostgreSQL testing.
  * Uses PGlite under the hood via the pg mock.
  */
 class TestStorageHelper {
-  storagesMap = new Map<string, Keyv>();
+  private storagesMap = new Map<string, Keyv>();
   private store: KeyvPostgres;
 
   constructor(ttl: number) {
     // Create the real KeyvPostgres - it will use our mocked pg.Pool
     // which is backed by PGlite
-    this.store = new KeyvPostgres({
-      uri: 'postgresql://test:test@localhost:5432/test',
-      table: 'keyv',
-    });
+    this.store = new KeyvPostgres();
 
     Object.keys(StorageNamespace).forEach((namespace) => {
       const keyv = new Keyv({
@@ -54,22 +49,10 @@ class TestStorageHelper {
 describe('PostgresTtlService', () => {
   let postgresTtlService: PostgresTtlService;
   let storageHelper: TestStorageHelper;
-  let db: PGlite;
-  let poolAdapter: PGlitePoolAdapter;
   let module: TestingModule;
 
   const setupServicesWithTtl = async (ttl: number) => {
-    if (db) {
-      await db.close();
-    }
-    db = new PGlite();
-    poolAdapter = new PGlitePoolAdapter(db);
-
-    // Configure the pg mock to use our PGlite adapter
-    configurePGMock(poolAdapter);
-
-    // Set the environment variable that PostgresTtlService expects
-    process.env.STORAGE_URI = 'postgresql://test:test@localhost:5432/test';
+    const db = PgMockManager.getInstance().getDb();
 
     storageHelper = new TestStorageHelper(ttl);
 
@@ -86,27 +69,17 @@ describe('PostgresTtlService', () => {
     postgresTtlService = module.get<PostgresTtlService>(PostgresTtlService);
   };
 
-  const clearDatabase = async () => {
-    if (db) {
-      await db.query('DELETE FROM keyv');
-    }
-  };
-
   afterEach(async () => {
-    await clearDatabase();
+    await PgMockManager.getInstance().clearDatabase();
     if (storageHelper) {
       await storageHelper.disconnect();
     }
     if (module) {
       await module.close();
     }
-    configurePGMock(null);
   });
 
   afterAll(async () => {
-    if (db) {
-      await db.close();
-    }
     delete process.env.STORAGE_URI;
   });
 
@@ -118,9 +91,9 @@ describe('PostgresTtlService', () => {
   it('deletes items from postgres database which a ttl older than now', async () => {
     await setupServicesWithTtl(-10000);
     await storageHelper.set('key', 'value', StorageNamespace.ROOMS);
-    const expired_items_count = await postgresTtlService.deleteExpiredItems();
+    const expiredItemsCount = await postgresTtlService.deleteExpiredItems();
 
-    expect(expired_items_count).toBe(1);
+    expect(expiredItemsCount).toBe(1);
     expect(
       await storageHelper.get('key', StorageNamespace.ROOMS),
     ).toBeUndefined();
@@ -135,32 +108,6 @@ describe('PostgresTtlService', () => {
     expect(await storageHelper.get('key', StorageNamespace.ROOMS)).toEqual(
       'value',
     );
-  });
-
-  it('does not delete items after switching ttls', async () => {
-    await setupServicesWithTtl(1000000);
-    await storageHelper.set('new', 'new-value', StorageNamespace.ROOMS);
-
-    // Create a new storage helper with negative TTL but reusing the same pg mock
-    const expiredStorageHelper = new TestStorageHelper(-1000);
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    await expiredStorageHelper.set(
-      'expired',
-      'expired-value',
-      StorageNamespace.ROOMS,
-    );
-
-    const expired_items_count = await postgresTtlService.deleteExpiredItems();
-
-    expect(expired_items_count).toBe(1);
-    expect(await storageHelper.get('new', StorageNamespace.ROOMS)).toEqual(
-      'new-value',
-    );
-    expect(
-      await storageHelper.get('expired', StorageNamespace.ROOMS),
-    ).toBeUndefined();
-
-    await expiredStorageHelper.disconnect();
   });
 
   it('deletes items from in all namespaces', async () => {

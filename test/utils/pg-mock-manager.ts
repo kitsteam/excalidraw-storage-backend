@@ -1,13 +1,20 @@
+import { PGlite } from '@electric-sql/pglite';
+import { PGlitePoolAdapter } from './pglite-pool.adapter';
+
 /**
  * Singleton manager for pg mock adapters.
- * Provides thread-safe access to the current PGlite pool adapter
+ * Provides thread-safe access to a shared PGlite instance
  * used by the mocked pg.Pool.
  */
 export class PgMockManager {
   private static instance: PgMockManager;
-  private currentAdapter: MockedPoolAdapter | null = null;
+  private readonly db: PGlite;
+  private readonly adapter: PGlitePoolAdapter;
 
-  private constructor() {}
+  private constructor() {
+    this.db = new PGlite();
+    this.adapter = new PGlitePoolAdapter(this.db);
+  }
 
   static getInstance(): PgMockManager {
     if (!PgMockManager.instance) {
@@ -17,41 +24,29 @@ export class PgMockManager {
   }
 
   /**
-   * Configure the pg mock to use a PGlite-backed adapter.
-   * Call this in tests that need real @keyv/postgres behavior.
+   * Get the pool adapter for use by pg.Pool mock.
    */
-  configure(
-    adapter: {
-      query: (sql: string, values?: unknown[]) => Promise<unknown>;
-      end: () => Promise<void>;
-    } | null,
-  ): void {
-    if (adapter) {
-      this.currentAdapter = {
-        query: jest.fn(adapter.query.bind(adapter)),
-        end: jest.fn(adapter.end.bind(adapter)),
-      };
-    } else {
-      this.currentAdapter = null;
+  getAdapter(): PGlitePoolAdapter {
+    return this.adapter;
+  }
+
+  /**
+   * Get the underlying PGlite instance for direct database access.
+   */
+  getDb(): PGlite {
+    return this.db;
+  }
+
+  /**
+   * Clear all data from the database (for test isolation).
+   */
+  async clearDatabase(): Promise<void> {
+    // Get all tables and truncate them
+    const result = await this.db.query<{ tablename: string }>(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+    );
+    for (const row of result.rows) {
+      await this.db.query(`DELETE FROM "${row.tablename}"`);
     }
   }
-
-  /**
-   * Get the current adapter, or null if not configured.
-   */
-  getAdapter(): MockedPoolAdapter | null {
-    return this.currentAdapter;
-  }
-
-  /**
-   * Clear the current adapter.
-   */
-  clear(): void {
-    this.currentAdapter = null;
-  }
-}
-
-interface MockedPoolAdapter {
-  query: jest.Mock;
-  end: jest.Mock;
 }

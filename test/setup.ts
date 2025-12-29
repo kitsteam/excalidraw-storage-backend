@@ -6,26 +6,9 @@
 
 import { PgMockManager } from './utils/pg-mock-manager';
 
-// Re-export for convenience
-export const configurePGMock = PgMockManager.getInstance().configure.bind(
-  PgMockManager.getInstance(),
-);
-
-// Mock pg module - can be configured to use PGlite via configurePGMock()
+// Mock pg module - always uses the shared PGlite instance
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => {
-    const adapter = PgMockManager.getInstance().getAdapter();
-    if (adapter) {
-      return adapter;
-    }
-    // Default mock for tests that don't need real pg behavior
-    return {
-      query: jest.fn().mockResolvedValue({ rows: [] }),
-      end: jest.fn().mockResolvedValue(undefined),
-      connect: jest.fn().mockResolvedValue({
-        query: jest.fn().mockResolvedValue({ rows: [] }),
-        release: jest.fn(),
-      }),
-    };
+    return PgMockManager.getInstance().getAdapter();
   }),
 }));
