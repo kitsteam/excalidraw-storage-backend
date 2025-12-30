@@ -41,7 +41,7 @@ jobs:
                   tags: |
                       ghcr.io/kitsteam/excalidraw-storage-backend:latest
 
-    excalidraw-storage-backend-build:
+    excalidraw-storage-backend-nest-build:
         runs-on: ubuntu-latest
 
         steps:
