@@ -27,7 +27,7 @@ It use Keyv as a simple K/V store so you can use the database of your choice.
 | `LOG_LEVEL`                   | Log level (`debug`, `verbose`, `log`, `warn`, `error`)                                                                                                                    | `warn`                              |
 | `BODY_LIMIT`                  | Payload size limit for scenes or images                                                                                                                                   | `50mb`                              |
 | `ENABLE_POSTGRES_TTL_SERVICE` | Enabling the Postgres TTL Service will clean up expired items once a day. This will break if used with a non-postgres `STORAGE_URI`.                                      | `false`                             |
-| `ENABLE_POSTGRES_TOUCH` | Enabling the Postgres Touch function will update the "last used" timestamp for files in the database. Requires a valid STORAGE_URI to be set. | `false` |
+| `ENABLE_POSTGRES_TOUCH` | Enabling the Postgres Touch function allows for optimized TTL refreshes via direct SQL updates without reading the file value. Requires a valid STORAGE_URI to be set. | `false` |
 
 ### Env Variables for Postgres
 
