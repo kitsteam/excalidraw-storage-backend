@@ -1,11 +1,16 @@
 import type { KeyvStoreAdapter } from 'keyv';
 
 /**
- * Re-export KeyvStoreAdapter from keyv library.
- * This type represents store implementations that can be injected into StorageService
- * (e.g., @keyv/postgres for production, in-memory Map for testing).
+ * Extended KeyvStoreAdapter that includes postgres-specific methods.
+ * The query method is available when using @keyv/postgres.
  */
-export type KeyvStore = KeyvStoreAdapter;
+export interface KeyvStore extends KeyvStoreAdapter {
+  /**
+   * Execute a raw SQL query (postgres-specific).
+   * Available when using @keyv/postgres adapter.
+   */
+  query?: (sql: string, params?: unknown[]) => Promise<unknown>;
+}
 
 /**
  * Factory function type for creating KeyvStore instances.

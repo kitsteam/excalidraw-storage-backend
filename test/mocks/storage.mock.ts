@@ -5,4 +5,5 @@ export const createMockStorageService = () => ({
   get: jest.fn(),
   set: jest.fn().mockResolvedValue(true),
   has: jest.fn(),
+  touch: jest.fn().mockResolvedValue(true),
 });
