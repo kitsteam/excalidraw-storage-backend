@@ -60,7 +60,9 @@ export class FilesController {
     }
 
     const updatedAt = new Date().toISOString();
-    this.logger.debug(`[touch] ✅ Refreshed TTL for file ${id} -> ${updatedAt}`);
+    this.logger.debug(
+      `[touch] ✅ Refreshed TTL for file ${id} -> ${updatedAt}`,
+    );
 
     return { id, updatedAt };
   }

@@ -14,7 +14,6 @@ import {
 import { TOUCH_CONFIG, TouchConfig } from './touch-config.interface';
 import { QueryResult } from 'pg';
 
-
 @Injectable()
 export class StorageService implements OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
@@ -58,11 +57,11 @@ export class StorageService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-      this.logger.log('Closing database connections...');
+    this.logger.log('Closing database connections...');
 
-      try {
-        // Clear all Keyv instances first
-        this.storagesMap.clear();
+    try {
+      // Clear all Keyv instances first
+      this.storagesMap.clear();
 
       // Close the shared store if it has a disconnect method
       if (this.store?.disconnect) {

@@ -93,7 +93,9 @@ describe('StorageService - touch()', () => {
     });
 
     it('should return false and log error on query failure', async () => {
-      (mockStore.query as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockStore.query as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
       const result = await service.touch(testKey, testNamespace);
 
@@ -107,10 +109,10 @@ describe('StorageService - touch()', () => {
 
       await service.touch(testKey, testNamespace);
 
-      expect(mockStore.query).toHaveBeenCalledWith(
+      expect(mockStore.query).toHaveBeenCalledWith(expect.any(String), [
+        currentTime + mockTtl,
         expect.any(String),
-        [currentTime + mockTtl, expect.any(String)],
-      );
+      ]);
     });
   });
 
