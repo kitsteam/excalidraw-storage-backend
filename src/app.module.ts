@@ -1,7 +1,9 @@
+import KeyvPostgres from '@keyv/postgres';
 import {
   Logger,
   MiddlewareConsumer,
   Module,
+  Provider,
   RequestMethod,
 } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -12,14 +14,33 @@ import { RoomsController } from './rooms/rooms.controller';
 import { FilesController } from './files/files.controller';
 import { HealthController } from './health/health.controller';
 import { PostgresTtlService } from './ttl/postgres-ttl.service';
+import { KEYV_STORE_FACTORY } from './storage/keyv-store.interface';
 
 const logger = new Logger('AppModule');
 
+const buildKeyvStoreFactoryProvider = (): Provider | undefined => {
+  const uri = process.env['STORAGE_URI'];
+  if (uri) {
+    return {
+      provide: KEYV_STORE_FACTORY,
+      useValue: () => new KeyvPostgres({ uri }),
+    };
+  }
+  logger.warn(
+    'STORAGE_URI is undefined, will use non persistent in memory storage',
+  );
+  return undefined;
+};
+
 const buildProviders = () => {
   const ttlProvider = addTtlProvider();
-  const providers: any[] = [StorageService];
+  const keyvStoreFactoryProvider = buildKeyvStoreFactoryProvider();
+  const providers: Provider[] = [StorageService];
   if (ttlProvider) {
     providers.push(ttlProvider);
+  }
+  if (keyvStoreFactoryProvider) {
+    providers.push(keyvStoreFactoryProvider);
   }
   return providers;
 };

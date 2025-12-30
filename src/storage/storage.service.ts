@@ -1,4 +1,3 @@
-import KeyvPostgres from '@keyv/postgres';
 import {
   Inject,
   Injectable,
@@ -16,7 +15,7 @@ import {
 @Injectable()
 export class StorageService implements OnModuleDestroy {
   private readonly logger = new Logger(StorageService.name);
-  storagesMap = new Map<string, Keyv>();
+  private storagesMap = new Map<string, Keyv>();
   private store?: KeyvStore;
 
   constructor(
@@ -24,22 +23,11 @@ export class StorageService implements OnModuleDestroy {
     @Inject(KEYV_STORE_FACTORY)
     storeFactory?: KeyvStoreFactory,
   ) {
-    const uri: string = process.env[`STORAGE_URI`];
     const ttl: number = parseInt(process.env[`STORAGE_TTL`], 10);
 
-    // Determine which store to use:
-    // 1. Injected factory (for testing)
-    // 2. KeyvPostgres if STORAGE_URI is set (production)
-    // 3. Keyv's built-in in-memory store (no store option)
+    // Use injected factory if provided, otherwise Keyv uses its built-in in-memory store
     if (storeFactory) {
       this.store = storeFactory();
-    } else if (uri) {
-      this.store = new KeyvPostgres({ uri });
-    } else {
-      this.logger.warn(
-        `STORAGE_URI is undefined, will use non persistent in memory storage`,
-      );
-      // store remains undefined - Keyv will use its built-in Map store
     }
 
     Object.keys(StorageNamespace).forEach((namespace) => {
