@@ -48,27 +48,22 @@ export class FilesController {
     };
   }
 
-  /**
-   * PATCH /files/:id/timestamp
-   * Förnyar TTL/expire för filen utan att ersätta innehållet.
-   */
   @Patch(':id/timestamp')
-  async touch(@Param() params) {
-    const id = params.id;
+  async touch(@Param('id') id: string) {
+    this.logger.debug(`[touch] Starting for file ${id}`);
 
-    // Kontrollera att filen finns
-    const data = await this.storageService.get(id, this.namespace);
-    if (!data) {
+    const updated = await this.storageService.touch(id, this.namespace);
+
+    if (!updated) {
+      this.logger.warn(`[touch] File ${id} not found`);
       throw new NotFoundException();
     }
 
-    // "Touch" – skriv om samma data för att förnya expire
-    await this.storageService.set(id, data, this.namespace);
+    const updatedAt = new Date().toISOString();
+    this.logger.debug(
+      `[touch] Refreshed TTL for file ${id} -> ${updatedAt}`,
+    );
 
-    this.logger.debug(`Touched file ${id}`);
-    return {
-      id,
-      updatedAt: new Date().toISOString(),
-    };
+    return { id, updatedAt };
   }
 }
