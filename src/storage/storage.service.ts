@@ -104,6 +104,17 @@ export class StorageService implements OnModuleDestroy {
 
   /**
    * Optimized postgres-only touch - updates TTL via SQL without reading the value.
+   *
+   * Uses regexp_replace instead of jsonb_set to avoid JSONB normalization.
+   * A TEXT->JSONB->TEXT round-trip (via jsonb_set) reorders keys alphabetically
+   * and normalizes whitespace, rewriting the entire stored string including
+   * the binary data payload. regexp_replace only modifies the "expires" field,
+   * keeping the data portion byte-identical.
+   *
+   * The pattern "expires":\d+ is safe because inside a JSON string value,
+   * quotes are escaped as \", so this can only match the top-level key.
+   *
+   * Expired records are cleaned up by PostgresTtlService (cron-based).
    */
   private async touchPostgres(
     key: string,
@@ -115,7 +126,7 @@ export class StorageService implements OnModuleDestroy {
 
       const result = await this.store!.query!(
         `UPDATE keyv
-         SET value = jsonb_set(value::jsonb, '{expires}', to_jsonb($1::bigint))
+         SET value = regexp_replace(value, '"expires":\\d+', '"expires":' || $1::text)
          WHERE key = $2`,
         [expires, fullKey],
       );

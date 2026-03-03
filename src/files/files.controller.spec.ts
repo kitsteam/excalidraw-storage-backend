@@ -37,6 +37,7 @@ describe('FilesController', () => {
       mockStorageService.get.mockResolvedValue(fileData);
 
       const mockRes = {
+        setHeader: jest.fn(),
         write: jest.fn(() => true),
         end: jest.fn(),
         on: jest.fn(),
@@ -48,6 +49,27 @@ describe('FilesController', () => {
       await new Promise((r) => setImmediate(r));
 
       expect(mockRes.end).toHaveBeenCalled();
+    });
+
+    it('should set Content-Length header matching data size', async () => {
+      const fileData = Buffer.from('binary-file-data');
+      mockStorageService.get.mockResolvedValue(fileData);
+
+      const mockRes = {
+        setHeader: jest.fn(),
+        write: jest.fn(() => true),
+        end: jest.fn(),
+        on: jest.fn(),
+        once: jest.fn(),
+        emit: jest.fn(),
+      };
+
+      await controller.findOne({ id: 'file-123' }, mockRes as any);
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Length',
+        fileData.length,
+      );
     });
 
     it('should throw NotFoundException when file does not exist', async () => {

@@ -37,6 +37,7 @@ describe('RoomsController', () => {
       mockStorageService.get.mockResolvedValue(roomData);
 
       const mockRes = {
+        setHeader: jest.fn(),
         write: jest.fn(() => true),
         end: jest.fn(),
         on: jest.fn(),
@@ -48,6 +49,27 @@ describe('RoomsController', () => {
       await new Promise((r) => setImmediate(r));
 
       expect(mockRes.end).toHaveBeenCalled();
+    });
+
+    it('should set Content-Length header matching data size', async () => {
+      const roomData = Buffer.from('room-binary-data');
+      mockStorageService.get.mockResolvedValue(roomData);
+
+      const mockRes = {
+        setHeader: jest.fn(),
+        write: jest.fn(() => true),
+        end: jest.fn(),
+        on: jest.fn(),
+        once: jest.fn(),
+        emit: jest.fn(),
+      };
+
+      await controller.findOne({ id: 'room-123' }, mockRes as any);
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Length',
+        roomData.length,
+      );
     });
 
     it('should throw NotFoundException when room does not exist', async () => {

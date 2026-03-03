@@ -71,7 +71,7 @@ describe('StorageService - touch()', () => {
       service = module.get<StorageService>(StorageService);
     });
 
-    it('should refresh TTL via SQL for an existing record', async () => {
+    it('should refresh TTL via SQL using regexp_replace for an existing record', async () => {
       jest.spyOn(Date, 'now').mockReturnValue(1000000000);
       (mockStore.query as jest.Mock).mockResolvedValue(createQueryResult(1));
 
@@ -79,9 +79,19 @@ describe('StorageService - touch()', () => {
 
       expect(result).toBe(true);
       expect(mockStore.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE keyv'),
+        expect.stringContaining('regexp_replace'),
         [1000000000 + mockTtl, `${testNamespace}:${testKey}`],
       );
+    });
+
+    it('should not use JSONB operations in touch SQL', async () => {
+      (mockStore.query as jest.Mock).mockResolvedValue(createQueryResult(1));
+
+      await service.touch(testKey, testNamespace);
+
+      const sql = (mockStore.query as jest.Mock).mock.calls[0][0] as string;
+      expect(sql).not.toContain('jsonb_set');
+      expect(sql).not.toContain('::jsonb');
     });
 
     it('should return false when record not found', async () => {

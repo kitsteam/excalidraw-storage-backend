@@ -40,6 +40,7 @@ describe('ScenesController', () => {
       mockStorageService.get.mockResolvedValue(sceneData);
 
       const mockRes = {
+        setHeader: jest.fn(),
         write: jest.fn(() => true),
         end: jest.fn(),
         on: jest.fn(),
@@ -51,6 +52,27 @@ describe('ScenesController', () => {
       await new Promise((r) => setImmediate(r));
 
       expect(mockRes.end).toHaveBeenCalled();
+    });
+
+    it('should set Content-Length header matching data size', async () => {
+      const sceneData = Buffer.from('scene-binary-data');
+      mockStorageService.get.mockResolvedValue(sceneData);
+
+      const mockRes = {
+        setHeader: jest.fn(),
+        write: jest.fn(() => true),
+        end: jest.fn(),
+        on: jest.fn(),
+        once: jest.fn(),
+        emit: jest.fn(),
+      };
+
+      await controller.findOne({ id: 'scene-123' }, mockRes as any);
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Length',
+        sceneData.length,
+      );
     });
 
     it('should throw NotFoundException when scene does not exist', async () => {
