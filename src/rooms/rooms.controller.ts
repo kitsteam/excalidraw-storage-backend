@@ -30,6 +30,7 @@ export class RoomsController {
       throw new NotFoundException();
     }
 
+    res.setHeader('Content-Length', data.length);
     const stream = new Readable();
     stream.push(data);
     stream.push(null);
