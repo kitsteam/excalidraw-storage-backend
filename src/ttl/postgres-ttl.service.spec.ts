@@ -146,8 +146,7 @@ describe('PostgresTtlService', () => {
       ],
     }).compile();
 
-    const failService =
-      failModule.get<PostgresTtlService>(PostgresTtlService);
+    const failService = failModule.get<PostgresTtlService>(PostgresTtlService);
     const result = await failService.deleteExpiredItems();
 
     expect(result).toBe(0);
