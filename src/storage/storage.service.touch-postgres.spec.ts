@@ -29,9 +29,7 @@ describe('touchPostgres regexp_replace integration (PGlite)', () => {
   };
 
   /** Read the raw value column from the keyv table. */
-  const readRawRow = async (
-    fullKey: string,
-  ): Promise<string | undefined> => {
+  const readRawRow = async (fullKey: string): Promise<string | undefined> => {
     const result = await getDb().query<{ value: string }>(
       'SELECT value FROM keyv WHERE key = $1',
       [fullKey],
