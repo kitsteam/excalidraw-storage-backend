@@ -1,4 +1,4 @@
-FROM node:24-bullseye-slim AS base
+FROM node:24-bookworm-slim AS base
 
 RUN corepack enable
 
@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 
 WORKDIR /home/node/app
 COPY --chown=node:node package.json package-lock.json entrypoint.sh ./
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
 
 USER node
 RUN npm ci
