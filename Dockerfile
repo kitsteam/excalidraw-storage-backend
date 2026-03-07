@@ -12,6 +12,9 @@ RUN npm ci
 COPY --chown=node:node . ./
 RUN npm run build
 
+# Prune dev dependencies after build
+RUN npm prune --omit=dev
+
 FROM base AS production
 
 RUN apt-get update && \
@@ -27,9 +30,10 @@ COPY --chown=node:node package.json package-lock.json entrypoint.sh ./
 RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
 
 USER node
-RUN npm ci
 
-COPY --from=production_buildstage /home/node/app/dist /home/node/app/dist
+# Copy pruned node_modules and dist from build stage instead of running npm ci again
+COPY --from=production_buildstage --chown=node:node /home/node/app/node_modules /home/node/app/node_modules
+COPY --from=production_buildstage --chown=node:node /home/node/app/dist /home/node/app/dist
 
 CMD ["./entrypoint.sh"]
 
