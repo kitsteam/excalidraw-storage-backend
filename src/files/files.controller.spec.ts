@@ -281,7 +281,12 @@ describe('FilesController', () => {
     it('should store using the composite key', async () => {
       const payload = Buffer.from('data');
 
-      await controller.createWithPrefix('shareLinks', 'link-abc', 'file-1', payload);
+      await controller.createWithPrefix(
+        'shareLinks',
+        'link-abc',
+        'file-1',
+        payload,
+      );
 
       expect(mockStorageService.set).toHaveBeenCalledWith(
         'shareLinks_link-abc_file-1',
@@ -297,7 +302,11 @@ describe('FilesController', () => {
     it('should return id, prefix, and updatedAt when composite key exists', async () => {
       mockStorageService.touch.mockResolvedValue(true);
 
-      const result = await controller.touchWithPrefix('rooms', 'room-abc', 'file-1');
+      const result = await controller.touchWithPrefix(
+        'rooms',
+        'room-abc',
+        'file-1',
+      );
 
       expect(result).toEqual({
         id: 'file-1',
@@ -336,7 +345,11 @@ describe('FilesController', () => {
         .mockResolvedValueOnce(false)
         .mockResolvedValueOnce(true);
 
-      const result = await controller.touchWithPrefix('rooms', 'room-abc', 'file-1');
+      const result = await controller.touchWithPrefix(
+        'rooms',
+        'room-abc',
+        'file-1',
+      );
 
       expect(result).toEqual({
         id: 'file-1',
@@ -348,7 +361,9 @@ describe('FilesController', () => {
     it('should not fall back to flat key for shareLinks prefix', async () => {
       mockStorageService.touch.mockResolvedValue(false);
 
-      await controller.touchWithPrefix('shareLinks', 'link-abc', 'file-1').catch(() => {});
+      await controller
+        .touchWithPrefix('shareLinks', 'link-abc', 'file-1')
+        .catch(() => {});
 
       expect(mockStorageService.touch).toHaveBeenCalledTimes(1);
     });
@@ -420,9 +435,7 @@ describe('FilesController', () => {
     });
 
     it('should reject unknown prefixes', () => {
-      expect(() => validator.transform('unknown')).toThrow(
-        BadRequestException,
-      );
+      expect(() => validator.transform('unknown')).toThrow(BadRequestException);
     });
 
     it('should reject empty string', () => {

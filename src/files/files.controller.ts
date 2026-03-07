@@ -147,7 +147,10 @@ export class FilesController {
   }
 
   @Put(':id')
-  async create(@Param('id', ValidateIdParam) id: string, @Body() payload: Buffer) {
+  async create(
+    @Param('id', ValidateIdParam) id: string,
+    @Body() payload: Buffer,
+  ) {
     await this.putFile(id, payload);
     this.logger.debug(`Created image ${id}`);
 
@@ -166,9 +169,7 @@ export class FilesController {
     }
 
     const updatedAt = new Date().toISOString();
-    this.logger.debug(
-      `[touch] Refreshed TTL for file ${id} -> ${updatedAt}`,
-    );
+    this.logger.debug(`[touch] Refreshed TTL for file ${id} -> ${updatedAt}`);
 
     return { id, updatedAt };
   }
@@ -187,10 +188,7 @@ export class FilesController {
     stream.pipe(res);
   }
 
-  private async putFile(
-    storageKey: string,
-    payload: Buffer,
-  ): Promise<void> {
+  private async putFile(storageKey: string, payload: Buffer): Promise<void> {
     await this.storageService.set(storageKey, payload, this.namespace);
   }
 }
