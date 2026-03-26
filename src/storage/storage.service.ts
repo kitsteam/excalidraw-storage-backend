@@ -124,12 +124,17 @@ export class StorageService implements OnModuleDestroy {
       const expires = Date.now() + this.ttl;
       const fullKey = `${namespace}:${key}`;
 
-      const result = await this.store!.query!(
-        `UPDATE keyv
-         SET value = regexp_replace(value, '"expires":\\d+', '"expires":' || $1::text)
-         WHERE key = $2`,
-        [expires, fullKey],
-      );
+      const result = (await Promise.race([
+        this.store!.query!(
+          `UPDATE keyv
+           SET value = regexp_replace(value, '"expires":\\d+', '"expires":' || $1::text)
+           WHERE key = $2`,
+          [expires, fullKey],
+        ),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Query timeout')), 5000),
+        ),
+      ])) as QueryResult;
 
       const rowCount = (result as QueryResult).rowCount;
 
