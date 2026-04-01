@@ -34,7 +34,7 @@ jobs:
               with:
                 node-version: '24'
             - name: Build and export to Docker
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               with:
                   context: .
                   tags: |
