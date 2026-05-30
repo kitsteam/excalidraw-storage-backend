@@ -1,4 +1,4 @@
-# pnpm security settings — see docs/pnpm-security.md for the full policy.
+# pnpm security settings.
 # 7-day quarantine on newly published versions (mitigates fast-revoked malicious releases).
 minimumReleaseAge: 10080
 # Lifecycle-script allowlist. pnpm 10 blocks dependency build scripts by default;
@@ -15,3 +15,8 @@ overrides:
   'path-to-regexp@>=8.0.0 <8.4.0': '>=8.4.0'
   'serialize-javascript@<7.0.4': '>=7.0.4'
   'ajv@>=7.0.0-alpha.0 <8.18.0': '>=8.18.0'
+  'handlebars@<4.7.9': '>=4.7.9'
+  'flatted@<3.4.2': '>=3.4.2'
+  'picomatch@<4.0.4': '>=4.0.4'
+  'lodash@<4.18.0': '>=4.18.0'
+  'fast-uri@<3.1.2': '>=3.1.2'

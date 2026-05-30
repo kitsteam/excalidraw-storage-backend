@@ -16,6 +16,31 @@ Feature:
 
 It use Keyv as a simple K/V store so you can use the database of your choice.
 
+## Development
+
+This project uses [pnpm](https://pnpm.io/) (pinned via the `packageManager` field) and requires Node.js `>=24`. Enable pnpm through Corepack, which ships with Node:
+
+```bash
+corepack enable
+pnpm install --frozen-lockfile
+```
+
+Common scripts:
+
+```bash
+pnpm start:dev      # start in watch mode
+pnpm build          # compile to dist/
+pnpm test           # run unit tests
+pnpm format:check   # verify formatting
+pnpm audit --prod   # check shipped dependencies for vulnerabilities
+```
+
+Alternatively, use the provided Docker Compose setup for a containerised dev environment:
+
+```bash
+docker compose up
+```
+
 ## Environement Variables
 
 | Name                          | Description                                                                                                                                                               | Default value                       |
