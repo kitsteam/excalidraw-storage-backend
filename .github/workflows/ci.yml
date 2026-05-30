@@ -1,4 +1,5 @@
-name: Docker Image CI
+name: CI
+
 permissions:
   contents: read
 
@@ -15,64 +16,63 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v6
-
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v3
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+              uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
-            - name: Login to GitHub Container Registry
-              uses: docker/login-action@v3
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.repository_owner }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '24'
-            - name: Build and export to Docker
-              uses: docker/build-push-action@v6
+            - name: Build Docker image (smoke test)
+              uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7
               with:
                   context: .
+                  target: production
                   tags: |
                       ghcr.io/kitsteam/excalidraw-storage-backend:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
 
     excalidraw-storage-backend-nest-build:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v6
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '24'
-
-            - run: npm i
-            - run: npm run build
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+            - uses: ./.github/actions/setup-pnpm
+            - run: pnpm run build
 
     excalidraw-storage-backend-format:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v6
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '24'
-
-            - run: npm i
-            - run: npm run format:check
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+            - uses: ./.github/actions/setup-pnpm
+            - run: pnpm run format:check
 
     excalidraw-storage-backend-test:
         runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v6
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '24'
 
-            - run: npm i
-            - run: npm run test
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+            - uses: ./.github/actions/setup-pnpm
+            - run: pnpm run test
+
+    excalidraw-storage-backend-audit:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+            - uses: ./.github/actions/setup-pnpm
+            - name: pnpm audit (fail on high/critical production deps)
+              run: pnpm audit --audit-level=high --prod
+
+    dependency-review:
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+            - name: Dependency Review (PR diff vs base)
+              uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+              with:
+                  fail-on-severity: high
+                  allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, CC0-1.0, Unlicense, BlueOak-1.0.0, Zlib, CC-BY-4.0

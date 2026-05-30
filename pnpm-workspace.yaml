@@ -1,0 +1,17 @@
+# pnpm security settings — see docs/pnpm-security.md for the full policy.
+# 7-day quarantine on newly published versions (mitigates fast-revoked malicious releases).
+minimumReleaseAge: 10080
+# Lifecycle-script allowlist. pnpm 10 blocks dependency build scripts by default;
+# entries here are the explicit decisions. Both current entries are intentionally
+# disallowed: @nestjs/core's postinstall is a funding/telemetry notice, and
+# unrs-resolver ships prebuilt binaries via optionalDependencies.
+allowBuilds:
+  '@nestjs/core': false
+  unrs-resolver: false
+# Transitive-dep CVE pins. Audit periodically with `pnpm why <pkg>` and remove
+# entries whose selector no longer matches any node in pnpm-lock.yaml.
+overrides:
+  'multer@<2.1.1': '>=2.1.1'
+  'path-to-regexp@>=8.0.0 <8.4.0': '>=8.4.0'
+  'serialize-javascript@<7.0.4': '>=7.0.4'
+  'ajv@>=7.0.0-alpha.0 <8.18.0': '>=8.18.0'

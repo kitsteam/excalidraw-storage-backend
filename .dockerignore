@@ -1,8 +1,9 @@
 *
 !nest-cli.json
 !src/
-!package-lock.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
 !package.json
 !tsconfig.build.json
 !tsconfig.json
-!entrypoint.sh
+!entrypoint.prod.sh

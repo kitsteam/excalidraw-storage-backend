@@ -1,38 +1,47 @@
-FROM node:24-bookworm-slim AS base
+ARG NODE_VERSION=24
+ARG ALPINE_VERSION=3.21
+ARG PNPM_VERSION=10.33.4
 
-RUN corepack enable
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS base
 
-FROM base AS production_buildstage
+ENV APP_PATH=/home/node/app
+WORKDIR $APP_PATH
 
-WORKDIR /home/node/app
-COPY package.json package-lock.json ./
-
-RUN npm ci
-
-COPY --chown=node:node . ./
-RUN npm run build
-
-FROM base AS production
-
-RUN apt-get update && \
-    apt-get install -y postgresql-client && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /home/node/app && \
-    chown node:node /home/node/app
-
-ENV NODE_ENV=production
-
-WORKDIR /home/node/app
-COPY --chown=node:node package.json package-lock.json entrypoint.sh ./
-RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
+RUN corepack enable \
+ && chown node:node $APP_PATH
 
 USER node
-RUN npm ci
 
-COPY --from=production_buildstage /home/node/app/dist /home/node/app/dist
+ARG PNPM_VERSION
+RUN corepack prepare pnpm@${PNPM_VERSION} --activate
 
-CMD ["./entrypoint.sh"]
+
+FROM base AS builder
+
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY --chown=node:node . ./
+RUN pnpm run build
+
 
 FROM base AS development
 
-WORKDIR /home/node/app
+
+FROM base AS production
+
+USER root
+RUN apk add --no-cache tini postgresql-client
+USER node
+
+ENV NODE_ENV=production
+
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder --chown=node:node $APP_PATH/dist ./dist
+
+COPY --chown=node:node --chmod=755 entrypoint.prod.sh ./
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["./entrypoint.prod.sh"]
