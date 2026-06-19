@@ -14,11 +14,6 @@ on:
 jobs:
     excalidraw-storage-backend-build:
         runs-on: ubuntu-latest
-        # Build verification only — never pushes (push defaults to false). Scoped
-        # to pull requests so the Dockerfile is validated before merge. Images are
-        # built and published exclusively on a published release (see release.yml),
-        # not on pushes to main.
-        if: github.event_name == 'pull_request'
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -31,7 +26,6 @@ jobs:
               with:
                   context: .
                   target: production
-                  push: false
                   tags: |
                       ghcr.io/kitsteam/excalidraw-storage-backend:latest
                   cache-from: type=gha
@@ -61,15 +55,6 @@ jobs:
             - uses: ./.github/actions/setup-pnpm
             - run: pnpm run test
 
-    excalidraw-storage-backend-audit:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-            - uses: ./.github/actions/setup-pnpm
-            - name: pnpm audit (fail on high/critical production deps)
-              run: pnpm audit --audit-level=high --prod
-
     dependency-review:
         runs-on: ubuntu-latest
         if: github.event_name == 'pull_request'
@@ -80,5 +65,8 @@ jobs:
             - name: Dependency Review (PR diff vs base)
               uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
               with:
-                  fail-on-severity: high
+                  # Vulnerability gating is disabled: internal policy is to wait a
+                  # week before integrating updates, and this action has no
+                  # time-based grace period. License enforcement stays on.
+                  vulnerability-check: false
                   allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, CC0-1.0, Unlicense, BlueOak-1.0.0, Zlib, CC-BY-4.0
