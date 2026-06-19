@@ -5,6 +5,9 @@ minimumReleaseAge: 10080
 # entries here are the explicit decisions. Both current entries are intentionally
 # disallowed: @nestjs/core's postinstall is a funding/telemetry notice, and
 # unrs-resolver ships prebuilt binaries via optionalDependencies.
+# strictDepBuilds turns an unreviewed build script into a hard install failure
+# instead of a warning, so a new dependency lifecycle script gates CI.
+strictDepBuilds: true
 allowBuilds:
   '@nestjs/core': false
   unrs-resolver: false
