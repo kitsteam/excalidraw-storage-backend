@@ -1,32 +1,6 @@
-# Dependabot policy for this repo — see docs/pnpm-security.md for the full policy.
-# Reference: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
-#
-# Policy: a uniform 7-day quarantine applies to EVERY dependency change, security
-# fixes included. Nothing younger than 7 days is ever installed (enforced by
-# `minimumReleaseAge: 10080` in pnpm-workspace.yaml). Concretely that means:
-#
-#   * NO version-update PRs. `open-pull-requests-limit: 0` disables Dependabot
-#     version updates for each ecosystem. Routine bumps are done by hand.
-#     https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#open-pull-requests-limit
-#
-#   * NO security-update PRs either. Dependabot security updates are IMMEDIATE by
-#     design and cannot be delayed — `cooldown` explicitly does not apply to them
-#     ("The cooldown option is only available for version updates, not security
-#     updates"), and the bug that briefly leaked cooldown into security updates
-#     was fixed to keep them immediate (dependabot/dependabot-core#13979). An
-#     immediate security PR would bypass our 7-day quarantine, so Dependabot
-#     SECURITY UPDATES ARE DISABLED at the repo level: Settings -> Code security
-#     -> "Dependabot security updates" -> Disabled.
-#
-#   * Dependabot ALERTS stay enabled (notifications only, no PRs). High/critical
-#     CVEs are triaged from the alert list and patched by hand once the fixed
-#     version clears the 7-day quarantine. Optionally use an auto-triage rule to
-#     auto-dismiss sub-high alerts so the list stays focused on high/critical.
-#     See docs/pnpm-security.md ("Dependabot security updates").
-#
-# The blocks below exist only to disable version updates. `schedule` is required
-# syntax but inert while updates are off; `cooldown` documents the 7-day intent
-# (mirroring minimumReleaseAge) should version updates ever be re-enabled.
+# Dependabot policy: version and security updates are disabled
+# (open-pull-requests-limit: 0); a uniform 7-day quarantine is enforced by
+# minimumReleaseAge in pnpm-workspace.yaml.
 version: 2
 updates:
   - package-ecosystem: "npm"
