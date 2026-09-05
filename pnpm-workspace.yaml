@@ -14,7 +14,8 @@ allowBuilds:
 # Transitive-dep CVE pins. Audit periodically with `pnpm why <pkg>` and remove
 # entries whose selector no longer matches any node in pnpm-lock.yaml.
 overrides:
-  'multer@<2.1.1': '>=2.1.1'
+  # GHSA-72gw-mp4g-v24j (DoS) - 2.1.1 is itself affected, the fix landed in 2.2.0.
+  'multer@<2.2.0': '>=2.2.0 <3.0.0'
   'path-to-regexp@>=8.0.0 <8.4.0': '>=8.4.0'
   'serialize-javascript@<7.0.4': '>=7.0.4'
   'ajv@>=7.0.0-alpha.0 <8.18.0': '>=8.18.0'
@@ -23,3 +24,6 @@ overrides:
   'picomatch@<4.0.4': '>=4.0.4'
   'lodash@<4.18.0': '>=4.18.0'
   'fast-uri@<3.1.2': '>=3.1.2'
+  # GHSA-rgw5-rvv9-x895 / -mh99-v99m-4gvg / -3jxr-9vmj-r5cp (ReDoS).
+  # Parent: rimraf > glob > minimatch, which still ranges below the fix.
+  'brace-expansion@>=3.0.0 <5.0.9': '>=5.0.9 <6.0.0'
