@@ -31,7 +31,7 @@ FROM base AS development
 FROM base AS production
 
 USER root
-RUN apk add --no-cache tini postgresql-client
+RUN apk add --no-cache tini
 USER node
 
 ENV NODE_ENV=production
