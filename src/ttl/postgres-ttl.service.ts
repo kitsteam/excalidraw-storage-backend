@@ -34,7 +34,7 @@ export class PostgresTtlService {
     this.clientFactory = clientFactory ?? defaultClientFactory;
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  @Cron(process.env['POSTGRES_TTL_CRON'] || CronExpression.EVERY_DAY_AT_4AM)
   async handleCron() {
     this.logger.log('Starting PostgresTtlService to clean up expired data.');
     this.deleteExpiredItems();
