@@ -166,6 +166,10 @@ export class AiService {
             error = part.error;
             yield { type: 'error', error: { message: 'Generation failed.' } };
             break;
+          case 'abort':
+            this.logger.warn(`LLM call aborted: ${part.reason}`);
+            yield { type: 'error', error: { message: 'Generation aborted.' } };
+            break;
         }
       }
     } finally {

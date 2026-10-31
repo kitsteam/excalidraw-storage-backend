@@ -292,6 +292,29 @@ describe('AiService', () => {
       expect(doStream.mock.calls[0][0].abortSignal.aborted).toBe(true);
     });
 
+    it('streams an error chunk and keeps the estimate booked when the call times out', async () => {
+      configure({
+        url: 'localhost:3000',
+        token: 'test-token',
+        provider: 'openai',
+        model: 'gpt-4',
+        timeoutMs: '1',
+      });
+      doStream.mockImplementationOnce(
+        ({ abortSignal }) =>
+          new Promise((_resolve, reject) =>
+            abortSignal.addEventListener('abort', () =>
+              reject(abortSignal.reason),
+            ),
+          ),
+      );
+
+      expect(await textToDiagram('short')).toEqual([
+        { type: 'error', error: { message: 'Generation aborted.' } },
+      ]);
+      expect(usageState.tokensUsed).toBe(estimateFor('short'));
+    });
+
     it('turns off SDK retries so one reservation pays for one attempt', async () => {
       doStream.mockRejectedValueOnce(apiError(500));
 
