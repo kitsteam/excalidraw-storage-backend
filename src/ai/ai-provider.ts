@@ -17,6 +17,7 @@ const createOpenAICompatibleProvider = (
   return createOpenAICompatible({
     baseURL: llmConfig.url,
     name: llmConfig.provider ?? PROVIDER_OPENAI_COMPATIBLE,
+    includeUsage: true,
     headers: llmConfig.token
       ? { Authorization: `Bearer ${llmConfig.token}` }
       : undefined,

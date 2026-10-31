@@ -43,6 +43,7 @@ describe('createProvider', () => {
     expect(createOpenAICompatible).toHaveBeenCalledWith({
       baseURL: 'https://api.example.com',
       name: 'openai-compatible',
+      includeUsage: true,
       headers: { Authorization: 'Bearer test-token' },
     });
   });
@@ -81,6 +82,7 @@ describe('createProvider', () => {
     expect(createOpenAICompatible).toHaveBeenCalledWith({
       baseURL: 'http://localhost:11434/v1',
       name: 'openai-compatible',
+      includeUsage: true,
       headers: undefined,
     });
   });
