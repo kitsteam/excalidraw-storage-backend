@@ -109,6 +109,7 @@ const buildUsageCounterMock = (
 describe('AiService', () => {
   let aiService: AiService;
   let model: MockLanguageModelV3;
+  let provider: jest.Mock;
   let doStream: jest.Mock<Promise<DoStreamResult>>;
   let createProviderMock: CreateProviderMock;
   let getLLMConfigMock: GetLLMConfigMock;
@@ -135,8 +136,9 @@ describe('AiService', () => {
 
     doStream = jest.fn(async () => streamResult('flowchart TD'));
     model = new MockLanguageModelV3({ doStream });
+    provider = jest.fn(() => model);
     createProviderMock.mockReturnValue(
-      (() => model) as unknown as ReturnType<typeof aiProvider.createProvider>,
+      provider as unknown as ReturnType<typeof aiProvider.createProvider>,
     );
 
     usageState = { tokensUsed: 0, requestsCount: 0 };
@@ -442,7 +444,7 @@ describe('AiService', () => {
       expect(lines(log)).toEqual([
         expect.stringMatching(
           new RegExp(
-            `text-to-diagram started \\(1 messages, 0 images, estimated ${estimateFor('short')} tokens\\)$`,
+            `text-to-diagram started \\(model gpt-4, 1 messages, 0 images, estimated ${estimateFor('short')} tokens\\)$`,
           ),
         ),
         expect.stringMatching(
@@ -461,7 +463,7 @@ describe('AiService', () => {
       );
 
       expect(lines(log)[0]).toMatch(
-        /diagram-to-code started \(1 messages, 1 images,/,
+        /diagram-to-code started \(model gpt-4, 1 messages, 1 images,/,
       );
     });
 
@@ -548,6 +550,61 @@ describe('AiService', () => {
         },
         expect.objectContaining({ type: 'file', mediaType: 'image/jpeg' }),
       ]);
+    });
+
+    it('uses the main model when no vision model is configured', async () => {
+      await collect(
+        await aiService.streamDiagramToCode({
+          texts: '',
+          image,
+          theme: 'light',
+        }),
+      );
+
+      expect(provider).toHaveBeenCalledWith('gpt-4');
+    });
+
+    it('uses the vision model when configured', async () => {
+      configure({
+        url: 'localhost:3000',
+        token: 'test-token',
+        provider: 'openai',
+        model: 'gpt-4',
+        visionModel: 'gpt-4o',
+      });
+
+      await collect(
+        await aiService.streamDiagramToCode({
+          texts: '',
+          image,
+          theme: 'light',
+        }),
+      );
+      await textToDiagram();
+
+      expect(provider.mock.calls).toEqual([['gpt-4o'], ['gpt-4']]);
+    });
+
+    it('streams with the vision model alone when no main model is configured', async () => {
+      configure({
+        url: 'localhost:3000',
+        token: 'test-token',
+        provider: 'openai',
+        visionModel: 'gpt-4o',
+      });
+
+      await collect(
+        await aiService.streamDiagramToCode({
+          texts: '',
+          image,
+          theme: 'light',
+        }),
+      );
+
+      expect(provider).toHaveBeenCalledWith('gpt-4o');
+      await expect(textToDiagram()).rejects.toThrow(
+        ServiceUnavailableException,
+      );
     });
 
     it('writes the theme into the system prompt', async () => {

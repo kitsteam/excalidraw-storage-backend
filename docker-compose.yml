@@ -17,6 +17,7 @@ services:
       AI_LLM_URL: ${AI_LLM_URL:-}
       AI_LLM_TOKEN: ${AI_LLM_TOKEN:-}
       AI_LLM_MODEL: ${AI_LLM_MODEL:-}
+      AI_LLM_VISION_MODEL: ${AI_LLM_VISION_MODEL:-}
       AI_LLM_RPM: ${AI_LLM_RPM:-}
       AI_LLM_TPM: ${AI_LLM_TPM:-}
       AI_LLM_TPD: ${AI_LLM_TPD:-}

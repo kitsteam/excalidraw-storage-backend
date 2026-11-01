@@ -100,6 +100,7 @@ export class AiService {
   ): Promise<AsyncGenerator<StreamChunk>> {
     return this.stream(
       'text-to-diagram',
+      this.llmConfig.model,
       TEXT_TO_DIAGRAM_SYSTEM_PROMPT,
       messages,
       abortSignal,
@@ -112,6 +113,7 @@ export class AiService {
   ): Promise<AsyncGenerator<StreamChunk>> {
     return this.stream(
       'diagram-to-code',
+      this.llmConfig.visionModel || this.llmConfig.model,
       diagramToCodeSystemPrompt(theme),
       [
         {
@@ -128,12 +130,13 @@ export class AiService {
 
   private async stream(
     task: string,
+    modelName: string | undefined,
     system: string,
     messages: ModelMessage[],
     abortSignal?: AbortSignal,
   ): Promise<AsyncGenerator<StreamChunk>> {
     const provider = createProvider(this.llmConfig);
-    if (!provider || !this.llmConfig.model) {
+    if (!provider || !modelName) {
       throw new ServiceUnavailableException('AI provider is not configured.');
     }
 
@@ -141,7 +144,8 @@ export class AiService {
     const reservation = await this.reserveBudget(estimated);
     return this.streamAndBook(
       reservation,
-      provider(this.llmConfig.model),
+      provider(modelName),
+      modelName,
       task,
       system,
       messages,
@@ -152,6 +156,7 @@ export class AiService {
   private async *streamAndBook(
     reservation: Reservation,
     model: LanguageModel,
+    modelName: string,
     task: string,
     system: string,
     messages: ModelMessage[],
@@ -160,7 +165,7 @@ export class AiService {
     const generation = new GenerationLog(
       this.logger,
       task,
-      AiService.describeRequest(messages, reservation.estimated),
+      AiService.describeRequest(modelName, messages, reservation.estimated),
     );
     let usage: LanguageModelUsage | undefined;
     let error: unknown;
@@ -296,6 +301,7 @@ export class AiService {
   }
 
   private static describeRequest(
+    modelName: string,
     messages: ModelMessage[],
     estimated: number,
   ): string {
@@ -308,7 +314,7 @@ export class AiService {
       0,
     );
     return (
-      `${messages.length} messages, ${images} images, ` +
+      `model ${modelName}, ${messages.length} messages, ${images} images, ` +
       `estimated ${estimated} tokens`
     );
   }

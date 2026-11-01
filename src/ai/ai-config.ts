@@ -3,6 +3,7 @@ export interface LLMProps {
   token?: string;
   provider?: string;
   model?: string;
+  visionModel?: string;
   tpm?: string;
   tpd?: string;
   rpm?: string;
@@ -20,6 +21,7 @@ export const getLLMConfig = (): LLMProps => ({
   token: process.env['AI_LLM_TOKEN'],
   provider: process.env['AI_LLM_PROVIDER'] ?? 'openai',
   model: process.env['AI_LLM_MODEL'],
+  visionModel: process.env['AI_LLM_VISION_MODEL'],
   tpm: process.env['AI_LLM_TPM'],
   tpd: process.env['AI_LLM_TPD'],
   rpm: process.env['AI_LLM_RPM'],

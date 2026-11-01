@@ -62,7 +62,7 @@ When `AI_ENABLED` is `true`, a second server listens on `AI_PORT` and serves the
 - `POST /v1/ai/text-to-diagram/chat-streaming`
 - `POST /v1/ai/diagram-to-code/generate-streaming`
 
-Point the frontend's `VITE_APP_AI_BACKEND` at this server, e.g. `http://localhost:8081`. `Wireframe to Code` needs a model with vision support.
+Point the frontend's `VITE_APP_AI_BACKEND` at this server, e.g. `http://localhost:8081`. `Wireframe to Code` needs a model with vision support. If `AI_LLM_MODEL` has none, set `AI_LLM_VISION_MODEL` to a vision model.
 
 | Name                       | Description                                                                                                                             | Default value |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
@@ -72,6 +72,7 @@ Point the frontend's `VITE_APP_AI_BACKEND` at this server, e.g. `http://localhos
 | `AI_LLM_URL`               | Base URL of an OpenAI compatible API, e.g. `http://localhost:11434/v1` for Ollama. Required for `openai-compatible`                     |               |
 | `AI_LLM_TOKEN`             | API token. Required for `openai`, optional for `openai-compatible`                                                                      |               |
 | `AI_LLM_MODEL`             | Model name, e.g. `gpt-4o-mini` or `qwen3.5:4b`                                                                                          |               |
+| `AI_LLM_VISION_MODEL`      | Model for `Wireframe to Code`. Needs vision support. Falls back to `AI_LLM_MODEL`                                                       |               |
 | `AI_LLM_RPM`               | Requests per minute. Unset means unlimited, `0` blocks every request                                                                    |               |
 | `AI_LLM_TPM`               | Tokens per minute. Unset means unlimited, `0` blocks every request                                                                      |               |
 | `AI_LLM_TPD`               | Tokens per day (UTC). Kept in memory, so it resets on restart and applies per instance. Unset means unlimited, `0` blocks every request |               |
