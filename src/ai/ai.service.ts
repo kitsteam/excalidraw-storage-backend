@@ -30,6 +30,7 @@ import {
 export const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 export const IMAGE_TOKEN_ESTIMATE = 2000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
+const OUT_OF_TOKENS = 'The model ran out of tokens before producing output.';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -165,6 +166,7 @@ export class AiService {
     let error: unknown;
     let outcome = 'stopped by client';
     let success = false;
+    let producedText = false;
     try {
       const result = this.callLlm(
         model,
@@ -180,10 +182,17 @@ export class AiService {
             break;
           case 'text-delta':
             generation.text();
+            producedText = true;
             yield { type: 'content', delta: part.text };
             break;
           case 'finish':
             usage = part.totalUsage;
+            if (part.finishReason === 'length' && !producedText) {
+              outcome = 'hit the token limit before producing output';
+              success = false;
+              yield { type: 'error', error: { message: OUT_OF_TOKENS } };
+              break;
+            }
             outcome = `finished (${part.finishReason})`;
             success = true;
             yield {

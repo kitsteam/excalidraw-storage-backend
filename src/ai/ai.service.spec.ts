@@ -315,6 +315,50 @@ describe('AiService', () => {
       expect(usageState.tokensUsed).toBe(estimateFor('short'));
     });
 
+    it('streams an error chunk when the token limit is hit before any text', async () => {
+      doStream.mockResolvedValueOnce({
+        stream: convertArrayToReadableStream([
+          { type: 'stream-start', warnings: [] },
+          { type: 'reasoning-start', id: 'r' },
+          { type: 'reasoning-delta', id: 'r', delta: 'thinking' },
+          {
+            type: 'finish',
+            finishReason: { unified: 'length', raw: 'length' },
+            usage: {
+              inputTokens: {
+                total: 100,
+                noCache: 100,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: { total: 400, text: 0, reasoning: 400 },
+            },
+          },
+        ]),
+      });
+
+      expect(await textToDiagram('short')).toEqual([
+        {
+          type: 'error',
+          error: {
+            message: 'The model ran out of tokens before producing output.',
+          },
+        },
+      ]);
+      expect(usageState.tokensUsed).toBe(500);
+    });
+
+    it('keeps partial output when the token limit is hit after some text', async () => {
+      doStream.mockResolvedValueOnce(
+        streamResult('flowchart TD', { finishReason: 'length' }),
+      );
+
+      expect(await textToDiagram('short')).toEqual([
+        { type: 'content', delta: 'flowchart TD' },
+        { type: 'done', finishReason: 'length' },
+      ]);
+    });
+
     it('turns off SDK retries so one reservation pays for one attempt', async () => {
       doStream.mockRejectedValueOnce(apiError(500));
 
