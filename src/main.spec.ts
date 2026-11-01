@@ -43,6 +43,17 @@ describe('bootstrap', () => {
     );
   });
 
+  it('should pass the LOG_LEVEL threshold to both servers', async () => {
+    process.env.LOG_LEVEL = 'warn';
+    process.env.AI_ENABLED = 'true';
+
+    await runBootstrap();
+
+    for (const [, options] of (NestFactory.create as jest.Mock).mock.calls) {
+      expect(options.logger).toEqual(['fatal', 'error', 'warn']);
+    }
+  });
+
   it('should not start the AI server by default', async () => {
     delete process.env.AI_ENABLED;
 

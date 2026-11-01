@@ -4,15 +4,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AiModule } from './ai/ai.module';
 import { getAiPort, isAiEnabled } from './ai/ai-config';
+import { getLogLevels } from './log-levels';
 
-function isLogLevel(value: any): value is LogLevel {
-  return value in ['log', 'error', 'warn', 'debug', 'verbose'];
-}
-
-async function bootstrapAi(logLevel: LogLevel) {
+async function bootstrapAi(logLevels: LogLevel[]) {
   const app = await NestFactory.create<NestExpressApplication>(AiModule, {
     cors: true,
-    logger: [logLevel],
+    logger: logLevels,
   });
 
   app.useBodyParser('json', { limit: process.env.BODY_LIMIT ?? '50mb' });
@@ -21,14 +18,12 @@ async function bootstrapAi(logLevel: LogLevel) {
 }
 
 async function bootstrap() {
-  const logLevel = isLogLevel(process.env.LOG_LEVEL)
-    ? process.env.LOG_LEVEL
-    : 'log';
+  const logLevels = getLogLevels();
 
   const app = await NestFactory.create(AppModule, {
     cors: true,
     bodyParser: false,
-    logger: [logLevel],
+    logger: logLevels,
   });
 
   app.setGlobalPrefix(process.env.GLOBAL_PREFIX ?? '/api/v2');
@@ -36,7 +31,7 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 8080);
 
   if (isAiEnabled()) {
-    await bootstrapAi(logLevel);
+    await bootstrapAi(logLevels);
   }
 }
 bootstrap();
