@@ -81,7 +81,14 @@ Point the frontend's `VITE_APP_AI_BACKEND` at this server, e.g. `http://localhos
 Example for a local Ollama:
 
 ```bash
-AI_ENABLED=true AI_LLM_PROVIDER=openai-compatible AI_LLM_URL=http://localhost:11434/v1 AI_LLM_MODEL=qwen3.5:4b AI_LLM_TIMEOUT_MS=300000 pnpm start:dev
+AI_ENABLED=true AI_LLM_PROVIDER=openai-compatible AI_LLM_URL=http://localhost:11434/v1 AI_LLM_MODEL=qwen3.5:4b-16k AI_LLM_TIMEOUT_MS=300000 pnpm start:dev
+```
+
+Ollama runs models with a 4096-token context by default, which covers the prompt, the reasoning and the answer. Reasoning models often use it up before writing any output, and the request fails with "The model ran out of tokens before producing output." The OpenAI compatible API cannot change the context per request, so create a model variant with a larger one:
+
+```bash
+printf 'FROM qwen3.5:4b\nPARAMETER num_ctx 16384\n' > Modelfile
+ollama create qwen3.5:4b-16k -f Modelfile
 ```
 
 ### Env Variables for Postgres
