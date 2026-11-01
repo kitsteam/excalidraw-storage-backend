@@ -1,4 +1,4 @@
-import { ServiceUnavailableException } from '@nestjs/common';
+import { Logger, ServiceUnavailableException } from '@nestjs/common';
 import { APICallError } from 'ai';
 import { convertArrayToReadableStream, MockLanguageModelV3 } from 'ai/test';
 import {
@@ -372,6 +372,109 @@ describe('AiService', () => {
         ServiceUnavailableException,
       );
       expect(doStream).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logging', () => {
+    let log: jest.SpyInstance;
+    let warn: jest.SpyInstance;
+
+    const lines = (spy: jest.SpyInstance): string[] =>
+      spy.mock.calls.map(([message]) => message);
+
+    beforeEach(() => {
+      log = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+      warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    });
+
+    afterEach(() => {
+      log.mockRestore();
+      warn.mockRestore();
+    });
+
+    it('logs the start and the successful end of a generation', async () => {
+      await textToDiagram('short');
+
+      expect(lines(log)).toEqual([
+        expect.stringMatching(
+          new RegExp(
+            `text-to-diagram started \\(1 messages, 0 images, estimated ${estimateFor('short')} tokens\\)$`,
+          ),
+        ),
+        expect.stringMatching(
+          /text-to-diagram finished \(stop\) after \d+\.\ds \(booked 500 tokens\)$/,
+        ),
+      ]);
+    });
+
+    it('counts the image of a diagram-to-code request', async () => {
+      await collect(
+        await aiService.streamDiagramToCode({
+          texts: '',
+          image: 'data:image/png;base64,AAAA',
+          theme: 'light',
+        }),
+      );
+
+      expect(lines(log)[0]).toMatch(
+        /diagram-to-code started \(1 messages, 1 images,/,
+      );
+    });
+
+    it('logs a client cancellation as a warning', async () => {
+      const controller = new AbortController();
+      doStream.mockImplementationOnce(({ abortSignal }) => {
+        controller.abort();
+        return Promise.reject(abortSignal.reason);
+      });
+
+      await collect(
+        await aiService.streamTextToDiagram(
+          [{ role: 'user', content: 'short' }],
+          controller.signal,
+        ),
+      );
+
+      expect(lines(warn)).toEqual([
+        expect.stringMatching(/text-to-diagram cancelled by client after/),
+      ]);
+    });
+
+    it('logs a timeout as a warning', async () => {
+      configure({
+        url: 'localhost:3000',
+        token: 'test-token',
+        provider: 'openai',
+        model: 'gpt-4',
+        timeoutMs: '1',
+      });
+      doStream.mockImplementationOnce(
+        ({ abortSignal }) =>
+          new Promise((_resolve, reject) =>
+            abortSignal.addEventListener('abort', () =>
+              reject(abortSignal.reason),
+            ),
+          ),
+      );
+
+      await textToDiagram('short');
+
+      expect(lines(warn)).toEqual([
+        expect.stringMatching(/text-to-diagram timed out after/),
+      ]);
+    });
+
+    it('logs a failed generation with the provider error', async () => {
+      doStream.mockRejectedValueOnce(apiError(401));
+
+      await textToDiagram('short');
+
+      expect(lines(warn)).toEqual([
+        expect.stringMatching(/^\[ai#\d+\] LLM call failed: provider error$/),
+        expect.stringMatching(
+          /text-to-diagram failed after \d+\.\ds \(booked 0 tokens\)$/,
+        ),
+      ]);
     });
   });
 

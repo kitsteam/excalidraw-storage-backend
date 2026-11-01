@@ -21,6 +21,7 @@ import {
   Theme,
 } from './prompts';
 import { RateLimitExceededException } from './rate-limit.exception';
+import { GenerationLog } from './generation-log';
 import {
   LlmUsageCounting,
   LlmUsageCounterService,
@@ -96,7 +97,12 @@ export class AiService {
     messages: ChatMessage[],
     abortSignal?: AbortSignal,
   ): Promise<AsyncGenerator<StreamChunk>> {
-    return this.stream(TEXT_TO_DIAGRAM_SYSTEM_PROMPT, messages, abortSignal);
+    return this.stream(
+      'text-to-diagram',
+      TEXT_TO_DIAGRAM_SYSTEM_PROMPT,
+      messages,
+      abortSignal,
+    );
   }
 
   streamDiagramToCode(
@@ -104,6 +110,7 @@ export class AiService {
     abortSignal?: AbortSignal,
   ): Promise<AsyncGenerator<StreamChunk>> {
     return this.stream(
+      'diagram-to-code',
       diagramToCodeSystemPrompt(theme),
       [
         {
@@ -119,6 +126,7 @@ export class AiService {
   }
 
   private async stream(
+    task: string,
     system: string,
     messages: ModelMessage[],
     abortSignal?: AbortSignal,
@@ -133,6 +141,7 @@ export class AiService {
     return this.streamAndBook(
       reservation,
       provider(this.llmConfig.model),
+      task,
       system,
       messages,
       abortSignal,
@@ -142,21 +151,41 @@ export class AiService {
   private async *streamAndBook(
     reservation: Reservation,
     model: LanguageModel,
+    task: string,
     system: string,
     messages: ModelMessage[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
+    const generation = new GenerationLog(
+      this.logger,
+      task,
+      AiService.describeRequest(messages, reservation.estimated),
+    );
     let usage: LanguageModelUsage | undefined;
     let error: unknown;
+    let outcome = 'stopped by client';
+    let success = false;
     try {
-      const result = this.callLlm(model, system, messages, abortSignal);
+      const result = this.callLlm(
+        model,
+        system,
+        messages,
+        generation,
+        abortSignal,
+      );
       for await (const part of result.fullStream) {
         switch (part.type) {
+          case 'reasoning-delta':
+            generation.reasoning();
+            break;
           case 'text-delta':
+            generation.text();
             yield { type: 'content', delta: part.text };
             break;
           case 'finish':
             usage = part.totalUsage;
+            outcome = `finished (${part.finishReason})`;
+            success = true;
             yield {
               type: 'done',
               finishReason: AiService.toFinishReason(part.finishReason),
@@ -164,16 +193,22 @@ export class AiService {
             break;
           case 'error':
             error = part.error;
+            outcome = 'failed';
+            success = false;
             yield { type: 'error', error: { message: 'Generation failed.' } };
             break;
           case 'abort':
-            this.logger.warn(`LLM call aborted: ${part.reason}`);
+            outcome = abortSignal?.aborted
+              ? 'cancelled by client'
+              : 'timed out';
+            success = false;
             yield { type: 'error', error: { message: 'Generation aborted.' } };
             break;
         }
       }
     } finally {
-      await this.book(reservation, usage, error);
+      const booked = await this.book(reservation, usage, error, generation);
+      generation.end(outcome, success, booked);
     }
   }
 
@@ -181,6 +216,7 @@ export class AiService {
     model: LanguageModel,
     system: string,
     messages: ModelMessage[],
+    generation: GenerationLog,
     abortSignal?: AbortSignal,
   ) {
     const timeout = AbortSignal.timeout(this.limits.timeoutMs);
@@ -191,7 +227,7 @@ export class AiService {
       maxOutputTokens: this.limits.maxOutputTokens,
       maxRetries: 0,
       onError: ({ error }) =>
-        this.logger.warn(`LLM call failed: ${AiService.describe(error)}`),
+        generation.warn(`LLM call failed: ${AiService.describe(error)}`),
       abortSignal: abortSignal
         ? AbortSignal.any([abortSignal, timeout])
         : timeout,
@@ -202,22 +238,25 @@ export class AiService {
     reservation: Reservation,
     usage: LanguageModelUsage | undefined,
     error: unknown,
-  ): Promise<void> {
+    generation: GenerationLog,
+  ): Promise<number> {
     if (error !== undefined && AiService.isUnbilled(error)) {
       await this.refundReservation(reservation);
-      return;
+      return 0;
     }
     const booked = AiService.bookedTokens(usage, reservation.estimated);
     await this.tryCommitReservation(reservation, booked);
-    this.logUsage(booked, reservation.estimated, usage);
+    this.logUsage(generation, booked, reservation.estimated, usage);
+    return booked;
   }
 
   private logUsage(
+    generation: GenerationLog,
     booked: number,
     estimated: number,
     usage: LanguageModelUsage | undefined,
   ): void {
-    this.logger.debug(
+    generation.debug(
       `LLM call booked ${booked} tokens (estimated ${estimated}, ` +
         `input ${usage?.inputTokens ?? 0}, output ${usage?.outputTokens ?? 0}, ` +
         `reasoning ${usage?.outputTokenDetails?.reasoningTokens ?? 0}, ` +
@@ -244,6 +283,24 @@ export class AiService {
       Buffer.byteLength(system, 'utf8') +
       promptTokens +
       this.limits.maxOutputTokens
+    );
+  }
+
+  private static describeRequest(
+    messages: ModelMessage[],
+    estimated: number,
+  ): string {
+    const images = messages.reduce(
+      (count, message) =>
+        typeof message.content === 'string'
+          ? count
+          : count +
+            message.content.filter((part) => part.type === 'image').length,
+      0,
+    );
+    return (
+      `${messages.length} messages, ${images} images, ` +
+      `estimated ${estimated} tokens`
     );
   }
 
