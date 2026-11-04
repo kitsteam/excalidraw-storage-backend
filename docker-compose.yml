@@ -9,8 +9,22 @@ services:
     stdin_open: true
     ports:
       - "8080:8080"
+      - "8081:8081"
     environment:
       STORAGE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_LLM_PROVIDER: ${AI_LLM_PROVIDER:-}
+      AI_LLM_URL: ${AI_LLM_URL:-}
+      AI_LLM_TOKEN: ${AI_LLM_TOKEN:-}
+      AI_LLM_MODEL: ${AI_LLM_MODEL:-}
+      AI_LLM_VISION_MODEL: ${AI_LLM_VISION_MODEL:-}
+      AI_LLM_RPM: ${AI_LLM_RPM:-}
+      AI_LLM_TPM: ${AI_LLM_TPM:-}
+      AI_LLM_TPD: ${AI_LLM_TPD:-}
+      AI_LLM_MAX_OUTPUT_TOKENS: ${AI_LLM_MAX_OUTPUT_TOKENS:-}
+      AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - .:/home/node/app
   postgres:
