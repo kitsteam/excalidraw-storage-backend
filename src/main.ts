@@ -1,20 +1,14 @@
-import { LogLevel } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-
-function isLogLevel(value: any): value is LogLevel {
-  return value in ['log', 'error', 'warn', 'debug', 'verbose'];
-}
+import { getLogLevels } from './log-levels';
 
 async function bootstrap() {
-  const logLevel = isLogLevel(process.env.LOG_LEVEL)
-    ? process.env.LOG_LEVEL
-    : 'log';
+  const logLevels = getLogLevels();
 
   const app = await NestFactory.create(AppModule, {
     cors: true,
     bodyParser: false,
-    logger: [logLevel],
+    logger: logLevels,
   });
 
   app.setGlobalPrefix(process.env.GLOBAL_PREFIX ?? '/api/v2');
