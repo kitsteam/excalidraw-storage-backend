@@ -12,7 +12,7 @@ import {
   diagramToCodeUserPrompt,
   TEXT_TO_DIAGRAM_SYSTEM_PROMPT,
 } from './prompts';
-import type { LlmUsageCounting } from './llm-usage-counter.service';
+import type { LlmUsageCounting } from './llm-usage.interface';
 import { RateLimitExceededException } from './rate-limit.exception';
 import * as aiProvider from './ai-provider';
 import * as aiConfig from './ai-config';

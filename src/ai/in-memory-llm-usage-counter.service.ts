@@ -1,26 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { LlmUsageCounting, UsageTotals } from './llm-usage.interface';
 
-export interface UsageTotals {
-  tokensUsed: number;
-  requestsCount: number;
-}
-
-export interface LlmUsageCounting {
-  reserve(
-    dateUsage: string,
-    tokens: number,
-    cap?: number,
-  ): Promise<UsageTotals | null>;
-  adjustTokens(dateUsage: string, delta: number): Promise<void>;
-}
-
+/**
+ * Fallback when no STORAGE_URI is set. Totals live in memory, so the daily
+ * cap resets on restart and applies per instance.
+ */
 @Injectable()
-export class LlmUsageCounterService implements LlmUsageCounting {
+export class InMemoryLlmUsageCounter implements LlmUsageCounting {
   private readonly totals = new Map<string, UsageTotals>();
-
-  static currentDateUsage(now: Date = new Date()): string {
-    return now.toISOString().slice(0, 10);
-  }
 
   async reserve(
     dateUsage: string,

@@ -23,9 +23,10 @@ import {
 import { RateLimitExceededException } from './rate-limit.exception';
 import { GenerationLog } from './generation-log';
 import {
+  currentDateUsage,
+  LLM_USAGE_COUNTER,
   LlmUsageCounting,
-  LlmUsageCounterService,
-} from './llm-usage-counter.service';
+} from './llm-usage.interface';
 
 export const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 export const IMAGE_TOKEN_ESTIMATE = 2000;
@@ -78,7 +79,7 @@ export class AiService {
   private readonly limits: ParsedLimits;
 
   constructor(
-    @Inject(LlmUsageCounterService)
+    @Inject(LLM_USAGE_COUNTER)
     private readonly usageCounter: LlmUsageCounting,
   ) {
     this.limits = {
@@ -377,7 +378,7 @@ export class AiService {
     this.checkPerMinuteLimits(estimated);
     const entry: PerMinuteEntry = { time: Date.now(), count: estimated };
     this.tokensUsedPerMinute.push(entry);
-    const dateUsage = LlmUsageCounterService.currentDateUsage();
+    const dateUsage = currentDateUsage();
     try {
       await this.reserveDaily(dateUsage, estimated);
     } catch (err) {
